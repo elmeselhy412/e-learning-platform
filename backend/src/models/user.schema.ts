@@ -1,15 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import mongoose, { HydratedDocument } from 'mongoose';
-
-export type UserDocument = HydratedDocument<User>;
-
+import mongoose from 'mongoose';
 
 @Schema()
-export class User {
-  @Prop({ required: true, unique: true })
-  userId: string;
-
+export class User extends Document {  // Inherit from Document to have Mongoose methods
   @Prop({ required: true })
   name: string;
 
@@ -30,3 +24,6 @@ export class User {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+// This will automatically add _id to your schema
+export type UserDocument = User & Document;
