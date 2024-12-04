@@ -1,12 +1,11 @@
-// auth.module.ts
 import { Module } from '@nestjs/common';
-import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { UserModule } from '../user/user.module'; // Import UserModule here
+import { AuthController } from './auth.controller';  // Optional: if you have AuthController
+import { UserModule } from '../user/user.module';   // Import the UserModule for UserService
 
 @Module({
-  imports: [UserModule], // Make sure to include UserModule here
-  controllers: [AuthController],
+  imports: [UserModule],  // Make sure UserModule is imported if AuthService depends on UserService
   providers: [AuthService],
+  controllers: [AuthController],  // Optional: If you have AuthController
 })
 export class AuthModule {}

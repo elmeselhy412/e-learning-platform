@@ -16,10 +16,10 @@ export class User extends Document {  // Inherit from Document to have Mongoose 
   @Prop({ enum: ['student', 'instructor', 'admin'], required: true })
   role: string;
 
-  @Prop({ type: String, default: null })
+  @Prop({ type: String, default: null, required:false })
   profilePictureUrl?: string;
 
-  @Prop({ default: Date.now })
+  @Prop({ default: Date.now, required: false })
   createdAt: Date;
 }
 

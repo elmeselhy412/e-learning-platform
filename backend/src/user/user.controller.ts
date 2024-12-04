@@ -9,12 +9,13 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   // Register a new user
-  @Post('register') // POST /users/register
+  @Post('register') 
   async register(@Body() createUserDto: CreateUserDto) {
     try {
       const user = await this.userService.createUser(createUserDto);
       return { message: 'User registered successfully', user };
     } catch (error) {
+      console.error('Error registering user:', error); // Log the actual error
       if (error.message === 'User already exists') {
         throw new HttpException(
           { message: 'User already exists' },
@@ -28,6 +29,7 @@ export class UserController {
       }
     }
   }
+  
 
   // // Login and generate JWT token
   // @Post('login')
