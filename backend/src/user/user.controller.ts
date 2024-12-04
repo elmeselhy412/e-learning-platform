@@ -1,14 +1,16 @@
 // src/user/user.controller.ts
-import { Body, Controller, Post, HttpException, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Post, Get, HttpException, HttpStatus, UseGuards, Query } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from '../dto/create-user.dto'; // Import DTO for user registration
-import { LoginDto } from 'src/dto/login.dto';
+import { EnrollCourseDto } from '../dto/enroll-course.dto'; // Import DTO for course enrollment
+import { SearchCoursesDto } from '../dto/search-course.dto'; // Import DTO for course searching
+import { JwtAuthGuard } from '../auth/jwt-auth.guard'; // Import JWT guard
 
 @Controller('users') // Base path for user-related routes
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  // Register a new user
+  // 1. Register a new user
   @Post('register') 
   async register(@Body() createUserDto: CreateUserDto) {
     try {
@@ -29,26 +31,35 @@ export class UserController {
       }
     }
   }
-  
 
-  // // Login and generate JWT token
-  // @Post('login')
-  // async login(@Body() body: LoginDto) {
-  //   // Fetch user from DB by email (returns UserDocument)
-  //   const user: UserDocument = await this.userService.findByEmail(body.email);
-  //   if (!user) {
-  //     return { error: 'User not found' };
-  //   }
+  // 3. Search for courses (Browsing)
+  @Get('search-courses')
+  async searchCourses(@Query() searchParams: SearchCoursesDto) {
+    try {
+      const courses = await this.userService.searchCourses(searchParams);
+      return { courses };
+    } catch (error) {
+      console.error('Error searching courses:', error);
+      throw new HttpException(
+        { message: 'Server error while searching for courses' },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 
-  //   // Compare provided password with the stored hashed password
-  //   const isPasswordMatch = await this.authService.comparePasswords(body.password, user.passwordHash);
-  //   if (isPasswordMatch) {
-  //     // Generate and return JWT token
-  //     const token = await this.authService.generateToken({ userId: user._id, role: user.role });
-  //     return { token };
-  //   }
-  //   return { error: 'Invalid credentials' };
-  // }
-
-
+  // 4. Enroll in a course
+  @Post('enroll')
+  @UseGuards(JwtAuthGuard) // Protect route with JWT authentication
+  async enrollCourse(@Body() enrollCourseDto: EnrollCourseDto) {
+    try {
+      const enrollment = await this.userService.enrollCourse(enrollCourseDto);
+      return { message: 'Enrolled successfully in the course', enrollment };
+    } catch (error) {
+      console.error('Error enrolling in course:', error);
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }
