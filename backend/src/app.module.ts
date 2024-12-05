@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { CourseModule } from './courses/courses.module';
 
 @Module({
   imports: [
@@ -12,8 +13,9 @@ import { AuthModule } from './auth/auth.module';
         useUnifiedTopology: true,
       }),
     }),
-    UserModule,
     AuthModule,
+    UserModule,
+    CourseModule
   ],
 })
 export class AppModule {}

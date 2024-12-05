@@ -1,22 +1,41 @@
-import { Injectable } from '@nestjs/common'; 
+import { Injectable, UnauthorizedException } from '@nestjs/common'; 
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
+import * as nodemailer from 'nodemailer';
+import * as speakeasy from 'speakeasy';
 import { User } from '../models/user.schema'; 
 import { Course } from '../models/course.schema'; 
 import { CreateUserDto } from 'src/dto/create-user.dto';
 import { EnrollCourseDto } from 'src/dto/enroll-course.dto'; // DTO for course enrollment
 import mongoose from 'mongoose'; // Import mongoose to use ObjectId
-
+import { JwtService } from '@nestjs/jwt';
+import { AuthService } from 'src/auth/auth.service';
 @Injectable()
 export class UserService {
+private readonly transporter = nodemailer.createTransport({
+    service: 'gmail',
+    port: 587,
+    secure: false, // Use TLS
+    auth: {
+      user: 'martinamaurice28@gmail.com',
+      pass: 'crop nent zihp lylc'
+    },
+    tls: {
+      rejectUnauthorized: false, // Allow self-signed certificates
+    },
+  });
+  
   constructor(
     @InjectModel(User.name) private userModel: Model<User>,
     @InjectModel(Course.name) private courseModel: Model<Course>, // Injecting Course model
+    private readonly authService: AuthService, // Inject AuthService
+    private readonly jwtService: JwtService, // Inject JwtService
+
   ) {}
 
   // Fetch user by email
-  async findByEmail(email: string): Promise<User | null> {
+  async findOneByEmail(email: string): Promise<User | null> {
     return this.userModel.findOne({ email });
   }
 
@@ -54,35 +73,105 @@ export class UserService {
       throw new Error('Error registering user');
     }
   }
-  async enrollCourse(enrollCourseDto: EnrollCourseDto): Promise<User> {
-    const { userId, courseId } = enrollCourseDto;
-  
-    // Use mongoose.Schema.Types.ObjectId for courseId
-    const courseObjectId = new mongoose.Schema.Types.ObjectId(courseId);  // Fixed line
-  
-    // Fetch the user from the database
-    const user = await this.userModel.findById(userId);
-    if (!user) {
-      throw new Error('User not found');
+  /////////login
+  async sendOtpEmail(user: User, otp: string) {
+    const mailOptions = {
+      from: '"ELearningPlatform" <e-learning-platform@outlook.com>',
+      to: user.email,
+      subject: 'Your OTP for Login',
+      text: `Your one-time password (OTP) is: ${otp}`,
+    };
+
+    try {
+      await this.transporter.sendMail(mailOptions);
+      console.log('OTP email sent successfully');
+    } catch (error) {
+      console.error('Error sending email:', error);
+      throw new Error('Error sending email');
     }
-  
-    // Fetch the course from the database
-    const course = await this.courseModel.findById(courseObjectId);
-    if (!course) {
-      throw new Error('Course not found');
-    }
-  
-    // Check if the user is already enrolled
-    if (user.courses && user.courses.some(courseId => courseId.toString() === courseObjectId.toString())) {
-      throw new Error('User is already enrolled in this course');
-    }
-  
-    // Enroll the user in the course
-    user.courses.push(courseObjectId);
-    await user.save();
-  
-    return user;
   }
+
+  generateOTP(): string {
+    return speakeasy.totp({
+      secret: 'otp-secret-key', // Use a consistent secret for OTPs
+      encoding: 'base32',
+    });
+  }
+
+  async verifyOTP(email: string, otp: string): Promise<boolean> {
+    const user = await this.findOneByEmail(email);
+    if (!user || user.otp !== otp) {
+      return false;
+    }
+    // Clear OTP after successful verification
+    user.otp = null;
+    await user.save();
+    return true;
+  }
+
+  async login(email: string, password: string): Promise<any> {
+    const user = await this.findOneByEmail(email);
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const passwordMatch = await this.comparePasswords(password, user.passwordHash);
+    if (!passwordMatch) {
+      throw new UnauthorizedException('Incorrect password');
+    }
+
+      const generatedOTP = this.generateOTP();
+      user.otp = generatedOTP;
+      await user.save();
+      await this.sendOtpEmail(user, generatedOTP);
+      return { message: 'OTP sent to your email' };
+   
+  }
+
+  async verifyOtpAndLogin(email: string, otp: string): Promise<any> {
+    const isVerified = await this.verifyOTP(email, otp);
+    if (!isVerified) {
+      throw new UnauthorizedException('Invalid OTP');
+    }
+
+    const user = await this.findOneByEmail(email);
+    const payload = { sub: user._id, role: user.role };
+    const token = this.authService.generateToken(user);
+
+    return { message: 'Login successful', token };
+  }
+  ////////end login
+  
+ 
+async enrollCourse(enrollCourseDto: EnrollCourseDto): Promise<User> {
+  const { userId, courseId } = enrollCourseDto;
+
+  // Convert courseId to ObjectId
+  const courseObjectId = new mongoose.Types.ObjectId(courseId);
+
+  // Fetch the user from the database
+  const user = await this.userModel.findById(userId);
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  // Fetch the course from the database
+  const course = await this.courseModel.findById(courseObjectId);
+  if (!course) {
+    throw new Error('Course not found');
+  }
+
+  // Check if the user is already enrolled
+  if (user.courses && user.courses.some((id) => id.toString() === courseObjectId.toString())) {
+    throw new Error('User is already enrolled in this course');
+  }
+
+  // Enroll the user in the course
+  user.courses.push(courseObjectId);
+  await user.save();
+
+  return user;
+}
   
 
 

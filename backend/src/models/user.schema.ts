@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Types } from 'mongoose';
 import mongoose from 'mongoose';  // Import mongoose to use ObjectId
 
 @Schema()
@@ -23,8 +23,11 @@ export class User extends Document {
   createdAt: Date;
 
   // Correctly using Schema.Types.ObjectId
-  @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Course', default: [] })
-  courses: mongoose.Schema.Types.ObjectId[];  // Array of ObjectIds referencing Course
+  @Prop({ type: [Types.ObjectId], ref: 'Course', default: [] })
+  courses: Types.ObjectId[]  // Array of ObjectIds referencing Course
+  
+  @Prop({ type: String, default: null }) // Field to store OTP
+  otp?: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
