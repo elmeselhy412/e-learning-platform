@@ -1,18 +1,17 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { CoursesController } from './courses.controller';
+import { Controller, Get, Param } from '@nestjs/common';
+import { CoursesService } from './courses.service';
 
-describe('CoursesController', () => {
-  let controller: CoursesController;
+@Controller('courses')
+export class CoursesController {
+  constructor(private readonly coursesService: CoursesService) {}
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [CoursesController],
-    }).compile();
+  @Get()
+  async findAll() {
+    return this.coursesService.findAll();
+  }
 
-    controller = module.get<CoursesController>(CoursesController);
-  });
-
-  it('should be defined', () => {
-    expect(controller).toBeDefined();
-  });
-});
+  @Get(':id')
+  async findOne(@Param('id') id: string) {
+    return this.coursesService.findOne(id);
+  }
+}
