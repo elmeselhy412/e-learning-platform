@@ -1,0 +1,95 @@
+/**
+ * Adjust and optimize courses by updating course materials and quizzes/content.
+ * @param {string} folderPath - Path to the folder containing course files.
+ * @param {object} feedbackData - Feedback data for courses.
+ * @param {object} performanceData - Performance data for courses.
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+function adjustAndOptimizeCourses(folderPath, feedbackData, performanceData) {
+  fs.readdir(folderPath, (err, files) => {
+    if (err) {
+      console.error(`Error reading folder: ${err.message}`);
+      return;
+    }
+
+    files.forEach((file) => {
+      const filePath = path.join(folderPath, file);
+
+      if (file.endsWith('.json')) {
+        fs.readFile(filePath, 'utf8', (err, data) => {
+          if (err) {
+            console.error(`Error reading file ${file}: ${err.message}`);
+            return;
+          }
+
+          try {
+            let course = JSON.parse(data);
+
+            if (feedbackData[course.id]) {
+              course.material = updateMaterial(course.material, feedbackData[course.id]);
+            }
+
+            if (performanceData[course.id]) {
+              course.quizzes = modifyQuizzes(course.quizzes, performanceData[course.id]);
+              course.content = modifyContent(course.content, performanceData[course.id]);
+            }
+
+            fs.writeFile(filePath, JSON.stringify(course, null, 2), (err) => {
+              if (err) {
+                console.error(`Error writing file ${file}: ${err.message}`);
+              } else {
+                console.log(`Updated course file: ${file}`);
+              }
+            });
+          } catch (parseError) {
+            console.error(`Error parsing JSON in file ${file}: ${parseError.message}`);
+          }
+        });
+      }
+    });
+  });
+}
+
+function updateMaterial(material, feedback) {
+  return material.map((section) => {
+    if (feedback[section.id]) {
+      section.content = feedback[section.id];
+    }
+    return section;
+  });
+}
+
+function modifyQuizzes(quizzes, performance) {
+  return quizzes.map((quiz) => {
+    if (performance[quiz.id]) {
+      quiz.difficulty = performance[quiz.id].adjustedDifficulty || quiz.difficulty;
+    }
+    return quiz;
+  });
+}
+
+function modifyContent(content, performance) {
+  return content.map((item) => {
+    if (performance[item.id]) {
+      item.relevance = performance[item.id].adjustedRelevance || item.relevance;
+    }
+    return item;
+  });
+}
+
+const feedbackData = {
+  1: { 101: "Updated Introduction" },
+  2: { 201: "Revised Topic Details" }
+};
+
+const performanceData = {
+  1: {
+    301: { adjustedRelevance: "very high" },
+    401: { adjustedDifficulty: "easy" }
+  }
+};
+
+adjustAndOptimizeCourses('/path/to/course/folder', feedbackData, performanceData);
