@@ -1,11 +1,12 @@
 // src/user/user.controller.ts
-import { Body, Controller, Post, Get, HttpException, HttpStatus, UseGuards, Query } from '@nestjs/common';
+import { Body, Controller, Post, Get, HttpException, HttpStatus, UseGuards, Query, Put, Patch, Param } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from '../dto/create-user.dto'; // Import DTO for user registration
 import { EnrollCourseDto } from '../dto/enroll-course.dto'; // Import DTO for course enrollment
 import { SearchCoursesDto } from '../dto/search-course.dto'; // Import DTO for course searching
 import { JwtStrategy } from '../auth/JwtStrategy'; // Import JWT guard
 import { JwtAuthGuard } from 'src/auth/JwtAuthGuard';
+import { UpdateProfileDto } from 'src/dto/update-profile.dto';
 
 @Controller('users') // Base path for user-related routes
 export class UserController {
@@ -84,5 +85,11 @@ export class UserController {
       );
     }
   }
-  
+  @Patch(':id')
+  async updateUserProfile(
+    @Param('id') id: string,
+    @Body() updateProfileDto: UpdateProfileDto,
+  ) {
+    return this.userService.updateUserProfile(id, updateProfileDto);
+  }
 }

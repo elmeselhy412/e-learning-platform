@@ -1,41 +1,42 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common'; 
+import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import * as nodemailer from 'nodemailer';
 import * as speakeasy from 'speakeasy';
-import { User } from '../models/user.schema'; 
-import { Course } from '../models/course.schema'; 
+import { User, UserDocument } from '../models/user.schema'; // Adjust the path
+import { Course, CourseDocument } from '../models/course.schema'; // Adjust the path
 import { CreateUserDto } from 'src/dto/create-user.dto';
 import { EnrollCourseDto } from 'src/dto/enroll-course.dto'; // DTO for course enrollment
-import mongoose from 'mongoose'; // Import mongoose to use ObjectId
+import mongoose from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from 'src/auth/auth.service';
+import { UpdateProfileDto } from 'src/dto/update-profile.dto';
+
 @Injectable()
 export class UserService {
-private readonly transporter = nodemailer.createTransport({
+  private readonly transporter = nodemailer.createTransport({
     service: 'gmail',
     port: 587,
     secure: false, // Use TLS
     auth: {
-      user: 'martinamaurice28@gmail.com',
-      pass: 'crop nent zihp lylc'
+      user: 'e.learning.platform121@gmail.com',
+      pass: 'mdyl zbfb stgb ovbk',
     },
     tls: {
       rejectUnauthorized: false, // Allow self-signed certificates
     },
   });
-  
-  constructor(
-    @InjectModel(User.name) private userModel: Model<User>,
-    @InjectModel(Course.name) private courseModel: Model<Course>, // Injecting Course model
-    private readonly authService: AuthService, // Inject AuthService
-    private readonly jwtService: JwtService, // Inject JwtService
 
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    @InjectModel(Course.name) private courseModel: Model<CourseDocument>,
+    private readonly authService: AuthService,
+    private readonly jwtService: JwtService,
   ) {}
 
   // Fetch user by email
-  async findOneByEmail(email: string): Promise<User | null> {
+  async findOneByEmail(email: string): Promise<UserDocument | null> {
     return this.userModel.findOne({ email });
   }
 
@@ -49,14 +50,12 @@ private readonly transporter = nodemailer.createTransport({
     const { password, role, name, email } = createUserDto;
 
     if (!password || !email || !role || !name) {
-      throw new Error('Email and password are required');
+      throw new Error('Email, password, role, and name are required');
     }
 
-    // Hash the password using bcrypt
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // Create the user object
     const newUser = new this.userModel({
       email,
       passwordHash: hashedPassword,
@@ -64,7 +63,6 @@ private readonly transporter = nodemailer.createTransport({
       name,
     });
 
-    // Save the user
     try {
       await newUser.save();
       return { message: 'User registered successfully' };
@@ -73,8 +71,9 @@ private readonly transporter = nodemailer.createTransport({
       throw new Error('Error registering user');
     }
   }
-  /////////login
-  async sendOtpEmail(user: User, otp: string) {
+
+  // Send OTP email
+  async sendOtpEmail(user: UserDocument, otp: string) {
     const mailOptions = {
       from: '"ELearningPlatform" <e-learning-platform@outlook.com>',
       to: user.email,
@@ -84,31 +83,33 @@ private readonly transporter = nodemailer.createTransport({
 
     try {
       await this.transporter.sendMail(mailOptions);
-      console.log('OTP email sent successfully');
     } catch (error) {
       console.error('Error sending email:', error);
       throw new Error('Error sending email');
     }
   }
 
+  // Generate OTP
   generateOTP(): string {
     return speakeasy.totp({
-      secret: 'otp-secret-key', // Use a consistent secret for OTPs
+      secret: 'otp-secret-key',
       encoding: 'base32',
     });
   }
 
+  // Verify OTP
   async verifyOTP(email: string, otp: string): Promise<boolean> {
     const user = await this.findOneByEmail(email);
     if (!user || user.otp !== otp) {
       return false;
     }
-    // Clear OTP after successful verification
-    user.otp = null;
+
+    user.otp = null; // Clear OTP after successful verification
     await user.save();
     return true;
   }
 
+  // Login and send OTP
   async login(email: string, password: string): Promise<any> {
     const user = await this.findOneByEmail(email);
     if (!user) {
@@ -120,14 +121,15 @@ private readonly transporter = nodemailer.createTransport({
       throw new UnauthorizedException('Incorrect password');
     }
 
-      const generatedOTP = this.generateOTP();
-      user.otp = generatedOTP;
-      await user.save();
-      await this.sendOtpEmail(user, generatedOTP);
-      return { message: 'OTP sent to your email' };
-   
+    const generatedOTP = this.generateOTP();
+    user.otp = generatedOTP;
+    await user.save();
+    await this.sendOtpEmail(user, generatedOTP);
+
+    return { message: 'OTP sent to your email' };
   }
 
+  // Verify OTP and complete login
   async verifyOtpAndLogin(email: string, otp: string): Promise<any> {
     const isVerified = await this.verifyOTP(email, otp);
     if (!isVerified) {
@@ -135,53 +137,44 @@ private readonly transporter = nodemailer.createTransport({
     }
 
     const user = await this.findOneByEmail(email);
-    const payload = { sub: user._id, role: user.role };
     const token = this.authService.generateToken(user);
 
     return { message: 'Login successful', token };
   }
-  ////////end login
-  
- 
-async enrollCourse(enrollCourseDto: EnrollCourseDto): Promise<User> {
-  const { userId, courseId } = enrollCourseDto;
 
-  // Convert courseId to ObjectId
-  const courseObjectId = new mongoose.Types.ObjectId(courseId);
+  // Enroll in a course
+  async enrollCourse(enrollCourseDto: EnrollCourseDto): Promise<UserDocument> {
+    const { userId, courseId } = enrollCourseDto;
 
-  // Fetch the user from the database
-  const user = await this.userModel.findById(userId);
-  if (!user) {
-    throw new Error('User not found');
+    const courseObjectId = new mongoose.Types.ObjectId(courseId);
+
+    const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const course = await this.courseModel.findById(courseObjectId);
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    if (user.courses.some((id) => id.toString() === courseObjectId.toString())) {
+      throw new Error('User is already enrolled in this course');
+    }
+
+    user.courses.push(courseObjectId);
+    await user.save();
+
+    return user;
   }
 
-  // Fetch the course from the database
-  const course = await this.courseModel.findById(courseObjectId);
-  if (!course) {
-    throw new Error('Course not found');
-  }
-
-  // Check if the user is already enrolled
-  if (user.courses && user.courses.some((id) => id.toString() === courseObjectId.toString())) {
-    throw new Error('User is already enrolled in this course');
-  }
-
-  // Enroll the user in the course
-  user.courses.push(courseObjectId);
-  await user.save();
-
-  return user;
-}
-  
-
-
-  // Example method for searching courses
-  async searchCourses(searchParams: any): Promise<Course[]> {
+  // Search courses
+  async searchCourses(searchParams: any): Promise<CourseDocument[]> {
     const { title, instructor } = searchParams;
-    const query = {};
+    const query: any = {};
 
     if (title) {
-      query['title'] = { $regex: title, $options: 'i' }; // Case-insensitive search
+      query['title'] = { $regex: title, $options: 'i' };
     }
 
     if (instructor) {
@@ -190,4 +183,38 @@ async enrollCourse(enrollCourseDto: EnrollCourseDto): Promise<User> {
 
     return this.courseModel.find(query);
   }
+
+  // Update user profile
+  async updateUserProfile(id: string, updateProfileDto: UpdateProfileDto): Promise<UserDocument> {
+    const user = await this.userModel.findByIdAndUpdate(
+      id,
+      { $set: updateProfileDto },
+      { new: true },
+    ).exec();
+
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    return user;
+  }
+
+  // Fetch enrolled courses for a user
+  async getEnrolledCourses(userId: string): Promise<CourseDocument[]> {
+    const user = await this.userModel
+      .findById(userId)
+      .populate<{ courses: CourseDocument[] }>('courses') // Populate and type courses
+      .exec();
+  
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+  
+    if (!Array.isArray(user.courses)) {
+      throw new Error('Courses field is not an array after population');
+    }
+  
+    return user.courses as CourseDocument[]; // Explicitly assert courses as CourseDocument[]
+  }
+  
 }
