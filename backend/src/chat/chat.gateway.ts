@@ -14,12 +14,42 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(`Client disconnected: ${client.id}`);
   }
 
-  // Message handler for sending messages
+  // Message handler for sending messages to specific rooms
   @SubscribeMessage('send_message') // Listens for 'send_message' event
-  handleMessage(@MessageBody() message: string, @ConnectedSocket() client: Socket): void {
-    console.log(`Received message: ${message} from ${client.id}`);
+  handleMessage(
+    @MessageBody() data: { roomId: string; message: string }, // Accepts a roomId and message
+    @ConnectedSocket() client: Socket
+  ): void {
+    console.log(`Message received in room ${data.roomId}: ${data.message} from ${client.id}`);
     
-    // Broadcast the message to all connected clients except the sender
-    client.broadcast.emit('receive_message', message); // 'receive_message' is the event sent to clients
+    // Broadcast the message to the specified room
+    client.to(data.roomId).emit('receive_message', {
+      sender: client.id,
+      message: data.message,
+      roomId: data.roomId,
+    });
   }
+
+  // Handler for joining a room
+  @SubscribeMessage('join_room')
+  handleJoinRoom(
+    @MessageBody() data: { roomId: string },
+    @ConnectedSocket() client: Socket
+  ) {
+    client.join(data.roomId);
+    console.log(`Client ${client.id} joined room ${data.roomId}`);
+    client.emit('room_joined', { roomId: data.roomId });
+  }
+
+  // Handler for leaving a room
+  @SubscribeMessage('leave_room')
+  handleLeaveRoom(
+    @MessageBody() data: { roomId: string },
+    @ConnectedSocket() client: Socket
+  ) {
+    client.leave(data.roomId);
+    console.log(`Client ${client.id} left room ${data.roomId}`);
+    client.emit('room_left', { roomId: data.roomId });
+  }
+  
 }
