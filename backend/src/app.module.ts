@@ -4,6 +4,7 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 import { CourseModule } from './courses/courses.module';
 import { NotificationModule } from './Notifications/Notifications.module';
+import { StudyGroupModule } from './studyGroup/study-group.module';
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { NotificationModule } from './Notifications/Notifications.module';
     CourseModule,
     AuthModule,
     UserModule,
+    StudyGroupModule,
     NotificationModule
   ],
 })
