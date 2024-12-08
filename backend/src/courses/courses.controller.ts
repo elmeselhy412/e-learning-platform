@@ -1,7 +1,6 @@
 import { Body, Controller, Get, Param, Post, Put, Delete, UseGuards, UseInterceptors, UploadedFiles, NotFoundException, Req } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from '../dto/create-course.dto';
-import { UpdateCourseDto } from '../dto/update-course.dto';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
 import { UserRole } from '../dto/create-user.dto';
@@ -31,12 +30,6 @@ export class CoursesController {
     return this.coursesService.getCourseById(id);
   }
 
-  @Put(':id')
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.INSTRUCTOR) 
-  async updateCourse(@Param('id') id: string, @Body() updateCourseDto: UpdateCourseDto) {
-    return this.coursesService.updateCourse(id, updateCourseDto);
-  }
 
 
   @Delete(':id')

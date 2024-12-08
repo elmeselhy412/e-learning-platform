@@ -1,6 +1,5 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCourseDto } from '../dto/create-course.dto';
-import { UpdateCourseDto } from '../dto/update-course.dto';
 import { Course } from 'src/models/course.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -31,19 +30,7 @@ export class CoursesService {
     return course;
   }
 
-  updateCourse(id: string, updateCourseDto: UpdateCourseDto) {
-    const courseIndex = this.courses.findIndex((course) => course.id === id);
-    if (courseIndex === -1) throw new NotFoundException(`Course with ID ${id} not found.`);
-
-    const updatedCourse = {
-      ...this.courses[courseIndex],
-      ...updateCourseDto,
-      version: this.courses[courseIndex].version + 1, 
-    };
-
-    this.courses[courseIndex] = updatedCourse;
-    return updatedCourse;
-  }
+ 
 
   deleteCourse(id: string) {
     const courseIndex = this.courses.findIndex((course) => course.id === id);
