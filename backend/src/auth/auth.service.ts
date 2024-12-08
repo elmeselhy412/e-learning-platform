@@ -1,46 +1,46 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument } from '../models/user.schema'; // Import the correct types
+import { JwtService } from '@nestjs/jwt';
 import { Model } from 'mongoose';
-import * as bcrypt from 'bcrypt';
-import * as jwt from 'jsonwebtoken';
-import { UserService } from 'src/user/user.service';
+import { FailedLogin } from 'src/models/failed-login.schema';
+import { InjectModel } from '@nestjs/mongoose';
+import { User } from '../models/user.schema';
+import { timestamp } from 'rxjs';
+
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly userService: UserService) {} // Inject UserService
+  constructor(@InjectModel(FailedLogin.name) private failedLoginModel: Model<FailedLogin>,
+    @InjectModel(User.name) private userModel: Model<User>,
+    private readonly jwtService: JwtService) { }
 
-
-  // Method to generate JWT token
-  generateToken(payload: any): string {
-    return jwt.sign(payload, 'your-secret-key', { expiresIn: '1h' });
+  // Generate JWT Token
+  generateToken(user: any): string {
+    const payload = { sub: user.id, role: user.role }; // Include user ID and role
+    return this.jwtService.sign(payload, { secret: 'JWT_SECRET', expiresIn: '1h' }); // Explicitly set secret and expiration
   }
 
-  // Method to verify JWT token
-  verifyToken(token: string): any {
-    try {
-      return jwt.verify(token, 'your-secret-key');
-    } catch (error) {
-      throw new Error('Invalid token');
-    }
+  async validateAdmin(username: string, password: string): Promise<boolean> {
+    const adminUserName = 'admin'; // Hardcoded admin user
+    const adminPassword = 'password123'; // Hardcoded admin password
+    return username === adminUserName && password === adminPassword;
   }
 
-  // Example login method
-  async login(email: string, password: string): Promise<string> {
-    const user: UserDocument | null = await this.userService.findOneByEmail(email );
+  async findUserByUsername(username: string): Promise<User | null> {
+    return this.userModel.findOne({ username });
+  }
 
-    if (!user) {
-      throw new Error('User not found');
+  async validateUser(username: string, passwrod: string): Promise<boolean> {
+    const user = await this.findUserByUsername(username);
+
+    if (!user || user.passwordHash !== passwrod) {
+      await new this.failedLoginModel({
+        username,
+        reason: user ? 'Invalid Password' : 'User not found',
+        timestamp: new Date(),
+      }).save();
+      return false;
     }
 
-    // Compare passwords (assuming you have a method to check the password)
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-    if (!isPasswordValid) {
-      throw new Error('Invalid credentials');
-    }
-
-    // Generate the JWT token with _id and role
-    const token = this.generateToken({ userId: user._id, role: user.role });
-    return token;
+    return true;
   }
 }

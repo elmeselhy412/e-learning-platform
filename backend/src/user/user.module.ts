@@ -1,15 +1,27 @@
-// user.module.ts
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from '../models/user.schema';
 import { UserService } from './user.service';
-import { AuthService } from '../auth/auth.service'; // If you're using AuthService in UserService
+import { UserController } from './user.controller';
+import { User, UserSchema } from '../models/user.schema';
+import { CourseModule } from '../courses/courses.module'; // Import the CourseModule
+import { ConfigModule } from '@nestjs/config';
+import { JwtStrategy } from 'src/auth/JwtStrategy';
+import { JwtModule, JwtService } from '@nestjs/jwt';
+import { AuthModule } from 'src/auth/auth.module';
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]), // Register the model here
-  ],
-  providers: [UserService],
-  exports: [UserService], // Export UserService so that it's available in other modules
+  imports: [MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+  CourseModule,
+  ConfigModule,
+  JwtModule.register({
+    secret: 'JWT_SECRET', // Use your hardcoded secret
+    signOptions: { expiresIn: '3h' }, // Token expiration
+  }),
+  forwardRef(() => AuthModule)
+],
+
+  controllers: [UserController],
+  providers: [UserService, JwtStrategy],
+  exports: [UserService],
 })
 export class UserModule {}

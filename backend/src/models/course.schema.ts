@@ -1,13 +1,10 @@
-import { MongooseModule, Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import mongoose, { HydratedDocument } from 'mongoose';
-export type UserDocument = HydratedDocument<Course>;
+import mongoose from 'mongoose';  // Import mongoose to use ObjectId
+
 
 @Schema()
-export class Course {
-  @Prop({ required: true, unique: true })
-  courseId: string;
-
+export class Course extends Document {
   @Prop({ required: true })
   title: string;
 
@@ -27,4 +24,6 @@ export class Course {
   createdAt: Date;
 }
 
+
 export const CourseSchema = SchemaFactory.createForClass(Course);
+export type CourseDocument = Course & Document;

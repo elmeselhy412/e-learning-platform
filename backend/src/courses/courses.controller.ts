@@ -4,6 +4,7 @@ import { CreateCourseDto } from '../dto/create-course.dto'; // Import DTO
 import { Roles } from '../auth/roles.decorator'; // Import Roles Decorator
 import { RolesGuard } from '../auth/roles.guard'; // Import RolesGuard
 import { UserRole } from '../dto/create-user.dto'; // Import UserRole
+import { JwtAuthGuard } from 'src/auth/JwtAuthGuard';
 
 @Controller('courses')
 export class CoursesController {
@@ -11,12 +12,11 @@ export class CoursesController {
 
   // Create a new course (protected by role guard)
   @Post('create')
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.INSTRUCTOR) // Only Admins and Instructors can create courses
-  async createCourse(@Body() createCourseDto: CreateCourseDto) {
+  async create(@Body() createCourseDto: CreateCourseDto) {
     return this.coursesService.createCourse(createCourseDto);
   }
-
   // Get all courses (no restriction)
   @Get()
   async getAllCourses() {

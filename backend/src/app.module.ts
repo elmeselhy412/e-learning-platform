@@ -1,13 +1,21 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { UserModule } from './user/user.module'; // Import your other modules here
-import { AuthModule } from './auth/auth.module'; // Import your Auth module here
+import { UserModule } from './user/user.module';
+import { AuthModule } from './auth/auth.module';
+import { CourseModule } from './courses/courses.module';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://localhost:27017/elearning-platform'), 
-    UserModule, // Your other modules
+    MongooseModule.forRootAsync({
+      useFactory: () => ({
+        uri: 'mongodb://localhost:27017/elearning-platform',
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
+      }),
+    }),
     AuthModule,
+    UserModule,
+    CourseModule
   ],
 })
 export class AppModule {}
