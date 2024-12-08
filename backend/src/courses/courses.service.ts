@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Note, NoteDocument } from '../models/Notes.schema'; // Adjust path if necessary
@@ -14,17 +14,19 @@ export class CoursesService {
     @InjectModel(Course.name) private courseModel:Model<CourseDocument>,
   ) {}
 
-  /**
-   * Create a new course
-   */
-  createCourse(createCourseDto: CreateCourseDto): any {
-    // Placeholder for course creation logic
-    return {
-      id: '1234', // Placeholder ID
-      ...createCourseDto,
-    };
-  }
+ 
+  async createCourse(createCourseDto: CreateCourseDto): Promise<Course> {
+    // Ensure that the course title is unique (optional validation)
+    const existingCourse = await this.courseModel.findOne({ title: createCourseDto.title });
+    if (existingCourse) {
+      throw new BadRequestException('A course with this title already exists');
+    }
 
+    // Create a new course
+    const newCourse = new this.courseModel(createCourseDto);
+
+    return newCourse.save();
+  }
   /**
    * Get all courses
    */

@@ -6,6 +6,9 @@ import { CourseModule } from './courses/courses.module';
 import { NotificationModule } from './Notifications/Notifications.module';
 import { StudyGroupModule } from './studyGroup/study-group.module';
 import { MulterModule } from '@nestjs/platform-express';
+import { AuditLogModule } from './auditlog/auditlog.module';
+import { AdminModule } from './Admin/admin.module';
+import { PythonIntegrationModule } from './python-service/python-integration.module';
 
 @Module({
   imports: [
@@ -24,7 +27,10 @@ import { MulterModule } from '@nestjs/platform-express';
     AuthModule,
     UserModule,
     StudyGroupModule,
-    NotificationModule
+    NotificationModule,
+    AuditLogModule,
+    AdminModule,
+    PythonIntegrationModule
     
   ],
 })
