@@ -1,8 +1,9 @@
 // src/user/user.controller.ts
-import { Body, Controller, Post, HttpException, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Post, HttpException, HttpStatus, Patch, Param } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from '../dto/create-user.dto'; // Import DTO for user registration
 import { LoginDto } from 'src/dto/login.dto';
+import { UpdateProfileByInstructorDto } from 'src/dto/update-profile-by-instructor.dto';
 
 @Controller('users') // Base path for user-related routes
 export class UserController {
@@ -49,6 +50,12 @@ export class UserController {
   //   }
   //   return { error: 'Invalid credentials' };
   // }
-
+  @Patch(':id/profileInstructor')
+  async updateProfile(
+    @Param('id') id: string,
+    @Body() updateProfileByInstructorDto: UpdateProfileByInstructorDto,
+  ) {
+    return this.userService.updateProfile(id, updateProfileByInstructorDto);
+  }
 
 }

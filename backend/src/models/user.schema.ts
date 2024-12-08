@@ -21,6 +21,12 @@ export class User extends Document {  // Inherit from Document to have Mongoose 
 
   @Prop({ default: Date.now, required: false })
   createdAt: Date;
+  
+  @Prop({ type: [String], default: [] })
+  expertise: string[];
+
+  @Prop({ type: [String], default: [] })
+  teachingInterests: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -6,9 +6,10 @@ import { PerformanceController } from './performance.controller';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Progress.name, schema: ProgressSchema }]),
+    MongooseModule.forFeature([{ name: Progress.name, schema: ProgressSchema }]), // Register ProgressModel
   ],
   providers: [PerformanceService],
   controllers: [PerformanceController],
+  exports: [MongooseModule], // Export MongooseModule to make ProgressModel available
 })
 export class PerformanceModule {}

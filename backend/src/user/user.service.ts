@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { isValidObjectId, Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import { User } from '../models/user.schema'; // Assuming User schema is defined
 import { CreateUserDto } from 'src/dto/create-user.dto';
+import { UpdateProfileByInstructorDto } from 'src/dto/update-profile-by-instructor.dto';
 
 @Injectable()
 export class UserService {
@@ -49,6 +50,36 @@ async createUser(createUserDto: CreateUserDto) {
     throw new Error('Error registering user');
   }
 }
+async updateProfile(userId: string, updateProfileByInstructorDto: UpdateProfileByInstructorDto): Promise<User> {
+  if (!isValidObjectId(userId)) {
+    throw new BadRequestException('Invalid MongoDB ID format');
+  }
 
+  // Use $addToSet to avoid duplicates or $push to allow duplicates
+  const updateOperations: any = {};
+  if (updateProfileByInstructorDto.expertise) {
+    updateOperations.$addToSet = {
+      ...(updateOperations.$addToSet || {}),
+      expertise: { $each: updateProfileByInstructorDto.expertise },
+    };
+  }
+  if (updateProfileByInstructorDto.teachingInterests) {
+    updateOperations.$addToSet = {
+      ...(updateOperations.$addToSet || {}),
+      teachingInterests: { $each: updateProfileByInstructorDto.teachingInterests },
+    };
+  }
+  const user = await this.userModel.findByIdAndUpdate(
+    userId,
+    updateOperations,
+    { new: true }, // Return the updated document
+  ).exec();
+
+  if (!user) {
+    throw new NotFoundException('User not found');
+  }
+  return user;
+
+}
     
 }
