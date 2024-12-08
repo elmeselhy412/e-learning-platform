@@ -105,7 +105,14 @@ export class UserService {
   async verifyOTP(email: string, otp: string): Promise<boolean> {
     const user = await this.findOneByEmail(email);
     if (!user || user.otp !== otp) {
-      return false;
+      // Log invalid OTP attempt to FailedLogin collection
+      await new this.failedLoginModel({
+        username: email,
+        reason: 'Invalid OTP',
+        timestamp: new Date(),
+      }).save();
+  
+      return false; // Return false for invalid OTP
     }
 
     user.otp = null; // Clear OTP after successful verification
@@ -114,32 +121,41 @@ export class UserService {
   }
 
   // Login and send OTP
-  async login(email: string, password: string): Promise<any> {
-    const user = await this.findOneByEmail(email);
-    if (!user) {
-      throw new UnauthorizedException('User not found');
-    }
-
-    const passwordMatch = await this.comparePasswords(password, user.passwordHash);
-    if (!passwordMatch) {
-      throw new UnauthorizedException('Incorrect password');
-    }
-    // if (!user || user.passwordHash !== password) {
-    //   await new this.failedLoginModel({
-    //     username: email,
-    //     reason: user ? 'Invalid Password' : 'User not found',
-    //     timestamp: new Date(),
-    //   }).save();
-    //   return false;
-    // }
-
-    const generatedOTP = this.generateOTP();
-    user.otp = generatedOTP;
-    await user.save();
-    await this.sendOtpEmail(user, generatedOTP);
-
-    return { message: 'OTP sent to your email' };
+  // Login and send OTP
+async login(email: string, password: string): Promise<any> {
+  // Find the user by email
+  const user = await this.findOneByEmail(email);
+  if (!user) {
+    // Log "User not found" in FailedLogin collection
+    await new this.failedLoginModel({
+      username: email,
+      reason: 'User not found',
+      timestamp: new Date(),
+    }).save();
+    throw new UnauthorizedException('User not found');
   }
+
+  // Compare the provided password with the hashed password
+  const passwordMatch = await this.comparePasswords(password, user.passwordHash);
+  if (!passwordMatch) {
+    // Log "Invalid Password" in FailedLogin collection
+    await new this.failedLoginModel({
+      username: email,
+      reason: 'Invalid Password',
+      timestamp: new Date(),
+    }).save();
+    throw new UnauthorizedException('Incorrect password');
+  }
+
+  // Generate and send OTP
+  const generatedOTP = this.generateOTP();
+  user.otp = generatedOTP;
+  await user.save();
+  await this.sendOtpEmail(user, generatedOTP);
+
+  return { message: 'OTP sent to your email' };
+}
+
 
   // Verify OTP and complete login
   async verifyOtpAndLogin(email: string, otp: string): Promise<any> {
@@ -246,6 +262,7 @@ export class UserService {
   async getAllInstructors(): Promise<User[]> {
     return this.userModel.find({ role: 'instructor' });
   }
+  
   async updateInstructor(id: string, body: any): Promise<User> {
     const updatedUser = await this.userModel.findOneAndUpdate(
       { _id: id, role: 'instructor' },

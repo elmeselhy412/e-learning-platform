@@ -155,21 +155,25 @@ export class UserController {
       );
     }
   }
-  @Put('insturctors/:id')
+  @Put('instructors/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   async updateInstructor(@Param('id') id: string, @Body() body) {
+    console.log('ID:', id);
+    console.log('Body:', body);
     try {
-      const upd = this.userService.updateInstructor(id, body);
+      const upd = await this.userService.updateInstructor(id, body);
+      console.log('Updated User:', upd);
+      return upd;
     } catch (error) {
-      console.log('Error updating Instructor', error.message);
+      console.log('Error updating Instructor:', error.message);
       throw new HttpException(
         { message: error.message },
         HttpStatus.BAD_REQUEST,
       );
     }
   }
-
+  
   @Delete('instructor/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)

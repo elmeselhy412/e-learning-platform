@@ -20,6 +20,13 @@ export class Course extends Document {
 
   @Prop({ default: Date.now })
   createdAt: Date;
+
+  @Prop({ required: true })
+  instructorId: string;
+
+  @Prop({ type: [String], default: [] }) // Array to store file paths
+  media: string[];
+
 }
 
 export const CourseSchema = SchemaFactory.createForClass(Course);
