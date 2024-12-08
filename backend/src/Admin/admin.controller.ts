@@ -56,9 +56,5 @@ export class AdminController {
   //     return 'Failed to send announcement';
   //   }
   // }
-
-  // @Get('security/logs')
-  // getSecurityLogs(): string {
-  //   return 'Security log details: [Failed login attempt on 2024-12-08 12:30 PM]';
-  // }
+  
 }
