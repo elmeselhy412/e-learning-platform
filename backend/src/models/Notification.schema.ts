@@ -3,6 +3,9 @@ import { Document } from 'mongoose';
 
 @Schema()
 export class Notification extends Document {
+  @Prop({ required: false })
+  title: string;
+
   @Prop({ required: true })
   message: string;
 
@@ -11,3 +14,4 @@ export class Notification extends Document {
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notification);
+export type NotificationDocument = Notification & Document;
