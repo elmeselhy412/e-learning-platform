@@ -33,32 +33,32 @@ export class AdminController {
   }
 
   
-  @Post('send-notification')
-  async sendNotification(): Promise<string> {
-    try {
-      const title = 'Platform Maintenance';
-      const message = 'The platform will be undergoing scheduled maintenance from 2 AM to 4 AM tomorrow.';
-      await this.adminService.sendNotification(title, message);
-      return 'Notification sent successfully';
-    } catch (error) {
-      this.adminService.logError(`Notification failed: ${error.message}`, error.stack);
-      return 'Failed to send notification';
-    }
-  }
+  // @Post('send-notification')
+  // async sendNotification(): Promise<string> {
+  //   try {
+  //     const title = 'Platform Maintenance';
+  //     const message = 'The platform will be undergoing scheduled maintenance from 2 AM to 4 AM tomorrow.';
+  //     await this.adminService.sendNotification(title, message);
+  //     return 'Notification sent successfully';
+  //   } catch (error) {
+  //     this.adminService.logError(`Notification failed: ${error.message}`, error.stack);
+  //     return 'Failed to send notification';
+  //   }
+  // }
 
-  @Post('announce-update')
-  async announceUpdate(): Promise<string> {
-    try {
-      await this.adminService.announceUpdate();
-      return 'Announcement sent successfully';
-    } catch (error) {
-      this.adminService.logError(`Announcement failed: ${error.message}`, error.stack);
-      return 'Failed to send announcement';
-    }
-  }
+  // @Post('announce-update')
+  // async announceUpdate(): Promise<string> {
+  //   try {
+  //     await this.adminService.announceUpdate();
+  //     return 'Announcement sent successfully';
+  //   } catch (error) {
+  //     this.adminService.logError(`Announcement failed: ${error.message}`, error.stack);
+  //     return 'Failed to send announcement';
+  //   }
+  // }
 
-  @Get('security/logs')
-  getSecurityLogs(): string {
-    return 'Security log details: [Failed login attempt on 2024-12-08 12:30 PM]';
-  }
+  // @Get('security/logs')
+  // getSecurityLogs(): string {
+  //   return 'Security log details: [Failed login attempt on 2024-12-08 12:30 PM]';
+  // }
 }

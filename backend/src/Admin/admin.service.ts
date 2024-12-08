@@ -40,18 +40,18 @@ export class AdminService {
     return course;
   }
 
-  async sendNotification(title: string, message: string): Promise<void> {
-    // Your code to send notification
-    this.logger.log(`Sending notification: ${title} - ${message}`);
-  }
+//   async sendNotification(title: string, message: string): Promise<void> {
+//     // Your code to send notification
+//     this.logger.log(`Sending notification: ${title} - ${message}`);
+//   }
 
-  async announceUpdate(): Promise<void> {
-    // Your code to announce update
-    this.logger.log('Announcing update...');
-  }
+//   async announceUpdate(): Promise<void> {
+//     // Your code to announce update
+//     this.logger.log('Announcing update...');
+//   }
 
-  // Log error method (optional)
-  logError(message: string, stack?: string): void {
-    this.logger.error(message, stack);
-  }
+//   // Log error method (optional)
+//   logError(message: string, stack?: string): void {
+//     this.logger.error(message, stack);
+//   }
 }
