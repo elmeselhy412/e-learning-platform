@@ -1,4 +1,3 @@
-// question.module.ts
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Question, QuestionSchema } from '../models/question.schema';

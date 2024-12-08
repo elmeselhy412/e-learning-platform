@@ -10,7 +10,7 @@ import { AdminModule } from './admin/admin.module';
 import { AuditLogModule } from './auditlog/auditlog.module';
 import { PythonIntegrationModule } from './python-service/python-integration.module';
 import { MulterModule } from '@nestjs/platform-express';
-import { QuestionModule } from './quiz/question.module';
+import { QuestionModule } from './question/question.module';
 
 @Module({
   imports: [

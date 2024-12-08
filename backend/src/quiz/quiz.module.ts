@@ -1,7 +1,7 @@
 // quiz.module.ts
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { QuestionModule } from './question.module';  // Import QuestionModule
+import { QuestionModule } from '../question/question.module';  // Import QuestionModule
 import { QuizService } from './quiz.service';
 import { QuizController } from './quiz.controller';
 import { Quiz, QuizSchema } from '../models/quiz.schema';
