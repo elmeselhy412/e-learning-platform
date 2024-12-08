@@ -15,7 +15,7 @@ import { MulterModule } from '@nestjs/platform-express';
   imports: [
     MongooseModule.forRootAsync({
       useFactory: () => ({
-        uri: 'mongodb://localhost:27017/elearning-platform',
+        uri: 'mongodb://127.0.0.1:27017/elearning-platform',
         useNewUrlParser: true,
         useUnifiedTopology: true,
       }),
