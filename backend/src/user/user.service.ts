@@ -12,9 +12,12 @@ import mongoose from 'mongoose';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from 'src/auth/auth.service';
 import { UpdateProfileDto } from 'src/dto/update-profile.dto';
+import { FailedLogin } from '../models/failed-login.schema';
+
 
 @Injectable()
 export class UserService {
+ 
   private readonly transporter = nodemailer.createTransport({
     service: 'gmail',
     port: 587,
@@ -31,6 +34,7 @@ export class UserService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Course.name) private courseModel: Model<CourseDocument>,
+    @InjectModel(FailedLogin.name) private failedLoginModel: Model<FailedLogin>,
     private readonly authService: AuthService,
     private readonly jwtService: JwtService,
   ) {}
@@ -120,6 +124,14 @@ export class UserService {
     if (!passwordMatch) {
       throw new UnauthorizedException('Incorrect password');
     }
+    // if (!user || user.passwordHash !== password) {
+    //   await new this.failedLoginModel({
+    //     username: email,
+    //     reason: user ? 'Invalid Password' : 'User not found',
+    //     timestamp: new Date(),
+    //   }).save();
+    //   return false;
+    // }
 
     const generatedOTP = this.generateOTP();
     user.otp = generatedOTP;
@@ -216,5 +228,37 @@ export class UserService {
   
     return user.courses as CourseDocument[]; // Explicitly assert courses as CourseDocument[]
   }
-  
+  async getAllStudents(): Promise<User[]> {
+    return this.userModel.find({ role: 'student' });
+  }
+  async updateStudent(id: string, body: any): Promise<User> {
+    const updatedUser = await this.userModel.findOneAndUpdate(
+      { _id: id, role: 'student' },
+      body,
+      { new: true }
+    );
+    return updatedUser;
+  }
+  async deleteStudent(id: string): Promise<{ message: string }> {
+    const result = await this.userModel.deleteOne({ _id: id, role: 'student' });
+    return { message: 'Student deleted successfully' };
+  }
+  async getAllInstructors(): Promise<User[]> {
+    return this.userModel.find({ role: 'instructor' });
+  }
+  async updateInstructor(id: string, body: any): Promise<User> {
+    const updatedUser = await this.userModel.findOneAndUpdate(
+      { _id: id, role: 'instructor' },
+      body,
+      { new: true }
+    );
+    return updatedUser;
+  }
+
+    // Save the user to the database
+  async deleteInstructor(id: string): Promise<{ message: string }> {
+    const result = await this.userModel.deleteOne({ _id: id, role: 'instructor' });
+    return { message: 'Student deleted successfully' };
+  }
+
 }

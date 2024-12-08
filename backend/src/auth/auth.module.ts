@@ -13,6 +13,7 @@ import { JwtStrategy } from './JwtStrategy';
       secret: 'JWT_SECRET',
       signOptions: { expiresIn: '1h' },
     }),
+    
     forwardRef(() => UserModule), // Use forwardRef to resolve circular dependency
  ],  providers: [JwtStrategy, AuthService],
   controllers: [ AuthController],  // Optional: If you have AuthController

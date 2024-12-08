@@ -8,10 +8,16 @@ import { ConfigModule } from '@nestjs/config';
 import { JwtStrategy } from 'src/auth/JwtStrategy';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from 'src/auth/auth.module';
+import { FailedLogin, FailedLoginSchema } from '../models/failed-login.schema';
+import { FailedLoginModule } from './failed.login.module'; // Import FailedLoginModule
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema },
+      { name: FailedLogin.name, schema: FailedLoginSchema }, // Register FailedLogin schema
+
+    ]),
+    FailedLoginModule,
     CourseModule, // Import CourseModule to resolve CourseModel dependency
     ConfigModule,
     JwtModule.register({

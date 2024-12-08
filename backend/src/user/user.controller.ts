@@ -1,16 +1,21 @@
 // src/user/user.controller.ts
-import { Body, Controller, Post, Get, HttpException, HttpStatus, UseGuards, Query, Put, Patch, Param } from '@nestjs/common';
+import { Body, Controller, Post, Get, HttpException, HttpStatus, UseGuards, Query, Put, Patch, Param, Delete } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from '../dto/create-user.dto'; // Import DTO for user registration
+import { CreateUserDto, UserRole } from '../dto/create-user.dto'; // Import DTO for user registration
 import { EnrollCourseDto } from '../dto/enroll-course.dto'; // Import DTO for course enrollment
 import { SearchCoursesDto } from '../dto/search-course.dto'; // Import DTO for course searching
 import { JwtStrategy } from '../auth/JwtStrategy'; // Import JWT guard
 import { JwtAuthGuard } from 'src/auth/JwtAuthGuard';
 import { UpdateProfileDto } from 'src/dto/update-profile.dto';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
+import { FailedLoginService } from './failed.login.service';
 
 @Controller('users') // Base path for user-related routes
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService,
+    private readonly failedLoginService: FailedLoginService
+  ) {}
 
   // 1. Register a new user
   @Post('register') 
@@ -92,4 +97,99 @@ export class UserController {
   ) {
     return this.userService.updateUserProfile(id, updateProfileDto);
   }
+  @Get('students')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async getAllStudent() {
+    try {
+      const students = await this.userService.getAllStudents();
+      return students;
+    } catch (error) {
+      console.log('Error retrieving students', error.message);
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+  @Put('students/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async updateStudent(@Param('id') id: string, @Body() body) {
+    try {
+      const upd = this.userService.updateStudent(id, body);
+    } catch (error) {
+      console.log('Error updating student', error.message);
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+  @Delete('students/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async deleteStudent(@Param('id') id: string) {
+    try {
+      const upd = this.userService.deleteStudent(id);
+    } catch (error) {
+      console.log('Error deleting student', error.message);
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+  @Get('instructors')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async getAllInstructors() {
+    try {
+      const instructors = await this.userService.getAllInstructors();
+      return instructors;
+    } catch (error) {
+      console.log('Error retrieving instructors', error.message);
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+  @Put('insturctors/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async updateInstructor(@Param('id') id: string, @Body() body) {
+    try {
+      const upd = this.userService.updateInstructor(id, body);
+    } catch (error) {
+      console.log('Error updating Instructor', error.message);
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  @Delete('instructor/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async deleteInstructor(@Param('id') id: string) {
+    try {
+      const upd = this.userService.deleteInstructor(id);
+    } catch (error) {
+      console.log('Error deleting instructor', error.message);
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  @Get('failed-logins')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async getFailedLogins() {
+    return this.failedLoginService.getFailedLogins();
+  }
+
 }
