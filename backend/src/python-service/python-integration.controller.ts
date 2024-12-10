@@ -1,5 +1,5 @@
 import { Controller, Post, Body } from '@nestjs/common';
-import { PythonIntegrationService } from './python-integration.service';
+import { PythonIntegrationService } from './python-integration.sevice';
 
 @Controller('recommendations')
 export class PythonIntegrationController {

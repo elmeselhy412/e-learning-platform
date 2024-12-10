@@ -2,19 +2,20 @@ import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
-import { PerformanceModule } from './performance/performance.module';
-import { FeedbackModule } from './feedback/feedback.module';
-import { CertificateModule } from './certificates/certificate.module'; // Correctly import CertificateModule
-import { QuizModule } from './quiz/quiz.module'; // Correctly import QuizModule
-import { ModulesModule } from './modules/modules.module';
 import { CourseModule } from './courses/courses.module';
-import { AdminModule } from './admin/admin.module';
-import { AuditLogModule } from './auditlog/auditlog.module';
-import { PythonIntegrationModule } from './python-service/python-integration.module';
+import { NotificationModule } from './Notifications/Notifications.module';
+import { StudyGroupModule } from './studyGroup/study-group.module';
 import { MulterModule } from '@nestjs/platform-express';
+import { AuditLogModule } from './auditlog/auditlog.module';
+import { AdminModule } from './Admin/admin.module';
+import { PythonIntegrationModule } from './python-service/python-integration.module';
+import { FeedbackModule } from './feedback/feedback.module';
+import { BackupModule } from './backup/backup.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
+    
     MongooseModule.forRootAsync({
       useFactory: () => ({
         uri: 'mongodb://localhost:27017/elearning-platform',
@@ -23,20 +24,20 @@ import { MulterModule } from '@nestjs/platform-express';
       }),
     }),
     MulterModule.register({
-      dest: './uploads', // Ensure the uploads folder exists
+      dest: './uploads', 
     }),
-    UserModule,
-    AuthModule,
-    PerformanceModule,
-    FeedbackModule,
-    CertificateModule, // Only import the module here
-    QuizModule,
+    ScheduleModule.forRoot(), // Initialize the scheduling module
     CourseModule,
-    ModulesModule,
-    AdminModule,
+    AuthModule,
+    UserModule,
+    BackupModule,
+    StudyGroupModule,
+    NotificationModule,
     AuditLogModule,
-    PythonIntegrationModule
-
+    AdminModule,
+    PythonIntegrationModule,
+    FeedbackModule
+    
   ],
 })
 export class AppModule {}

@@ -1,63 +1,83 @@
 from flask import Flask, request, jsonify
 import pandas as pd
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
-from sklearn.feature_extraction.text import TfidfVectorizer
-
+from pymongo import MongoClient
 
 class RecommendationModel:
-    def __init__(self, interaction_file: str, courses_file: str):
-        self.interaction_file = interaction_file
-        self.courses_file = courses_file
-        self.interaction = None
-        self.courses = None
+    def _init_(self, mongo_uri: str, db_name: str):
+        self.mongo_uri = mongo_uri
+        self.db_name = db_name
+        self.client = MongoClient(self.mongo_uri)
+        self.db = self.client[self.db_name]
 
-    def load_data(self):
-        # Load user interactions and course data
-        self.interaction = pd.read_csv(self.interaction_file)
-        self.courses = pd.read_csv(self.courses_file)
+    def load_data_from_mongo(self):
+        # Query progress data
+        progresses_collection = self.db['progresses']
+        progresses_data = list(progresses_collection.find())
 
-    def generate_course_similarity(self):
-        # Use course descriptions to calculate similarities
-        vectorizer = TfidfVectorizer(stop_words='english')
-        tfidf_matrix = vectorizer.fit_transform(self.courses['description'])
-        similarity_matrix = cosine_similarity(tfidf_matrix, tfidf_matrix)
-        return similarity_matrix
+        # Prepare interaction data
+        interaction_data = []
+        for progress in progresses_data:
+            user_id = str(progress['userId'])  # Convert ObjectId to string
+            course_id = str(progress['courseId'])  # Convert ObjectId to string
+            scores = progress.get('scores', [])
+            for score_entry in scores:
+                if isinstance(score_entry, int):
+                    interaction_data.append({
+                        'user_id': user_id,
+                        'course_id': course_id,
+                        'score': score_entry
+                    })
+                elif isinstance(score_entry, dict):
+                    interaction_data.append({
+                        'user_id': user_id,
+                        'course_id': course_id,
+                        'score': score_entry.get('score', 0)
+                    })
 
-    def recommend(self, user_id: str, top_n: int = 5):
-        # Get user interactions
-        user_data = self.interaction[self.interaction['user_id'] == user_id]
+        interaction_df = pd.DataFrame(interaction_data)
+
+        # Query course data
+        courses_collection = self.db['courses']
+        courses_data = list(courses_collection.find())
+
+        # Prepare course data
+        course_data = []
+        for course in courses_data:
+            course_data.append({
+                'course_id': str(course['_id']),
+                'title': course.get('title', ''),
+                'description': course.get('description', ''),
+                'category': course.get('category', ''),
+                'difficulty_level': course.get('difficultyLevel', ''),
+                'created_by': str(course.get('createdBy', ''))
+            })
+
+        courses_df = pd.DataFrame(course_data)
+
+        return interaction_df, courses_df
+
+    def recommend(self, user_id: str, interaction_df: pd.DataFrame, top_n: int = 5):
+        # Filter the interaction data for the given user_id
+        user_data = interaction_df[interaction_df['user_id'] == user_id]
         if user_data.empty:
             return []
 
-        # Calculate similarity scores for courses
-        similarity_matrix = self.generate_course_similarity()
+        # Sort user data by score
+        user_data_sorted = user_data.sort_values(by='score', ascending=False)
 
-        # Find user's highest-rated courses
-        user_courses = user_data.sort_values(by='score', ascending=False)['course_id'].values
-        recommendations = set()
+        # Recommend top N courses
+        recommendations = user_data_sorted['course_id'].head(top_n).tolist()
 
-        for course_id in user_courses:
-            course_idx = self.courses[self.courses['course_id'] == course_id].index[0]
-            similar_indices = np.argsort(similarity_matrix[course_idx])[::-1]
-            for idx in similar_indices[:top_n]:
-                recommendations.add(self.courses.iloc[idx]['course_id'])
-
-        # Exclude already interacted courses
-        recommendations = [rec for rec in recommendations if rec not in user_courses]
-        return recommendations[:top_n]
-
+        return recommendations
 
 # Flask app
-app = Flask(__name__)
+app = Flask(_name_)
 
 # Initialize the recommendation model
 model = RecommendationModel(
-    interaction_file="interaction_data.csv",
-    courses_file="courses_data.csv"
+    mongo_uri="mongodb://localhost:27017",
+    db_name="elearning-platform"
 )
-model.load_data()
-
 
 @app.route("/recommend", methods=["POST"])
 def recommend():
@@ -70,9 +90,12 @@ def recommend():
         return jsonify({"error": "user_id is required"}), 400
 
     # Get recommendations
-    recommendations = model.recommend(user_id, top_n)
-    return jsonify({"recommendations": recommendations})
+    try:
+        interaction_df, _ = model.load_data_from_mongo()
+        recommendations = model.recommend(user_id, interaction_df, top_n)
+        return jsonify({"recommendations": recommendations})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-
-if __name__ == "__main__":
+if _name_ == "_main_":
     app.run(port=5000)

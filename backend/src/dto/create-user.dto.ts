@@ -22,4 +22,10 @@ export class CreateUserDto {
 
   @IsEnum(UserRole)
   readonly role: UserRole;
+
+  @IsString()
+  readonly learningPreferences?: string[];
+
+  @IsString()
+  readonly subjectsOfInterest?: string[];
 }

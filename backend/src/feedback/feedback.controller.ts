@@ -17,25 +17,21 @@ export class FeedbackController {
 
   @Post('/submit')
   async submitFeedback(
-    @Body() { userId, courseId, feedback }: { userId: string; courseId: string; feedback: string },
+    @Body()
+    { userId, courseId, feedback, isForFutureUpdates }: 
+    { userId: string; courseId: string; feedback: string; isForFutureUpdates?: boolean },
   ): Promise<Feedback> {
-    const objectIdCourseId = new Types.ObjectId(courseId); // Convert to ObjectId
-    console.log(`Converted courseId to ObjectId: ${objectIdCourseId}`);
-    console.log(`Querying with userId: ${userId} and courseId: ${objectIdCourseId}`);
-  
-    const progress = await this.progressModel.findOne({ userId, courseId: objectIdCourseId }).exec();
-    console.log(`Queried progress: ${JSON.stringify(progress)}`);
-  
-    if (!progress || progress.completionPercentage < 100) {
-      throw new Error('Feedback can only be submitted after completing the course.');
-    }
-  
-    // Save feedback
-    return this.feedbackModel.create({ userId, courseId: objectIdCourseId, feedback });
+    return this.feedbackService.submitFeedback(userId, courseId, feedback, isForFutureUpdates || false);
   }
+  
 
   @Get('/course/:courseId')
   async getFeedbackForCourse(@Param('courseId') courseId: string) {
     return this.feedbackService.getFeedbackForCourse(courseId);
   }
-}
+  @Get('future-updates')
+  async getFutureUpdatesFeedback() {
+    return await this.feedbackService.getFeedbackForFutureUpdates();
+  }
+} 
+

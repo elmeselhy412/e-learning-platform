@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PythonIntegrationService } from './python-integration.service';
+import { PythonIntegrationService } from './python-integration.sevice';
 import { PythonIntegrationController } from './python-integration.controller';
 
 @Module({

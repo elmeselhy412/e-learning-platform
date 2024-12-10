@@ -1,15 +1,23 @@
 // src/user/user.controller.ts
-import { Body, Controller, Post, HttpException, HttpStatus, Patch, Param } from '@nestjs/common';
+import { Body, Controller, Post, Get, HttpException, HttpStatus, UseGuards, Query, Put, Patch, Param, Delete } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from '../dto/create-user.dto'; // Import DTO for user registration
-import { LoginDto } from 'src/dto/login.dto';
-import { UpdateProfileByInstructorDto } from 'src/dto/update-profile-by-instructor.dto';
+import { CreateUserDto, UserRole } from '../dto/create-user.dto'; // Import DTO for user registration
+import { EnrollCourseDto } from '../dto/enroll-course.dto'; // Import DTO for course enrollment
+import { SearchCoursesDto } from '../dto/search-course.dto'; // Import DTO for course searching
+import { JwtStrategy } from '../auth/JwtStrategy'; // Import JWT guard
+import { JwtAuthGuard } from 'src/auth/JwtAuthGuard';
+import { UpdateProfileDto } from 'src/dto/update-profile.dto';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
+import { FailedLoginService } from './failed.login.service';
 
 @Controller('users') // Base path for user-related routes
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(private readonly userService: UserService,
+    private readonly failedLoginService: FailedLoginService
+  ) {}
 
-  // Register a new user
+  // 1. Register a new user
   @Post('register') 
   async register(@Body() createUserDto: CreateUserDto) {
     try {
@@ -30,32 +38,162 @@ export class UserController {
       }
     }
   }
+  @Post('login')
+  async login(@Body() loginDto: { email: string; password: string }) {
+    try {
+      const result = await this.userService.login(loginDto.email, loginDto.password);
+      return result;
+    } catch (error) {
+      console.error('Error during login:', error);
+      throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
+    }
+  }
+
+  @Post('verify-otp')
+  async verifyOtp(@Body() verifyDto: { email: string; otp: string }) {
+    try {
+      const result = await this.userService.verifyOtpAndLogin(verifyDto.email, verifyDto.otp);
+      return result;
+    } catch (error) {
+      console.error('Error during OTP verification:', error);
+      throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
+    }
+  }
   
+  // 3. Search for courses (Browsing)
+  @Get('search-courses')
+  async searchCourses(@Query() searchParams: SearchCoursesDto) {
+    try {
+      const courses = await this.userService.searchCourses(searchParams);
+      return { courses };
+    } catch (error) {
+      console.error('Error searching courses:', error);
+      throw new HttpException(
+        { message: 'Server error while searching for courses' },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 
-  // // Login and generate JWT token
-  // @Post('login')
-  // async login(@Body() body: LoginDto) {
-  //   // Fetch user from DB by email (returns UserDocument)
-  //   const user: UserDocument = await this.userService.findByEmail(body.email);
-  //   if (!user) {
-  //     return { error: 'User not found' };
-  //   }
-
-  //   // Compare provided password with the stored hashed password
-  //   const isPasswordMatch = await this.authService.comparePasswords(body.password, user.passwordHash);
-  //   if (isPasswordMatch) {
-  //     // Generate and return JWT token
-  //     const token = await this.authService.generateToken({ userId: user._id, role: user.role });
-  //     return { token };
-  //   }
-  //   return { error: 'Invalid credentials' };
-  // }
-  @Patch(':id/profileInstructor')
-  async updateProfile(
+  // 4. Enroll in a course
+  @Post('enroll') // Endpoint: users/enroll
+  @UseGuards(JwtAuthGuard) // Protect route with JWT authentication
+  async enrollCourse(@Body() enrollCourseDto: EnrollCourseDto) {
+    try {
+      const enrollment = await this.userService.enrollCourse(enrollCourseDto);
+      return { message: 'Enrolled successfully in the course', enrollment };
+    } catch (error) {
+      console.error('Error enrolling in course:', error.message);
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST, // Use appropriate HTTP status code
+      );
+    }
+  }
+  @Patch(':id')
+  async updateUserProfile(
     @Param('id') id: string,
-    @Body() updateProfileByInstructorDto: UpdateProfileByInstructorDto,
+    @Body() updateProfileDto: UpdateProfileDto,
   ) {
-    return this.userService.updateProfile(id, updateProfileByInstructorDto);
+    return this.userService.updateUserProfile(id, updateProfileDto);
+  }
+  @Get('students')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async getAllStudent() {
+    try {
+      const students = await this.userService.getAllStudents();
+      return students;
+    } catch (error) {
+      console.log('Error retrieving students', error.message);
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+  @Put('students/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async updateStudent(@Param('id') id: string, @Body() body) {
+    try {
+      const upd = this.userService.updateStudent(id, body);
+    } catch (error) {
+      console.log('Error updating student', error.message);
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+  @Delete('students/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async deleteStudent(@Param('id') id: string) {
+    try {
+      const upd = this.userService.deleteStudent(id);
+    } catch (error) {
+      console.log('Error deleting student', error.message);
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+  @Get('instructors')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async getAllInstructors() {
+    try {
+      const instructors = await this.userService.getAllInstructors();
+      return instructors;
+    } catch (error) {
+      console.log('Error retrieving instructors', error.message);
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+  @Put('instructors/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async updateInstructor(@Param('id') id: string, @Body() body) {
+    console.log('ID:', id);
+    console.log('Body:', body);
+    try {
+      const upd = await this.userService.updateInstructor(id, body);
+      console.log('Updated User:', upd);
+      return upd;
+    } catch (error) {
+      console.log('Error updating Instructor:', error.message);
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+  
+  @Delete('instructor/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async deleteInstructor(@Param('id') id: string) {
+    try {
+      const upd = this.userService.deleteInstructor(id);
+    } catch (error) {
+      console.log('Error deleting instructor', error.message);
+      throw new HttpException(
+        { message: error.message },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  }
+
+  @Get('failed-logins')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  async getFailedLogins() {
+    return this.failedLoginService.getFailedLogins();
   }
 
 }

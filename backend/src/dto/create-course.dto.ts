@@ -1,15 +1,22 @@
-import { IsString, IsNotEmpty, IsArray, IsOptional } from 'class-validator';
+import { IsString, IsEnum, IsNotEmpty } from 'class-validator';
 
 export class CreateCourseDto {
   @IsString()
   @IsNotEmpty()
-  readonly title: string;
+  title: string;
 
   @IsString()
   @IsNotEmpty()
-  readonly description: string;
+  description: string;
 
-  @IsArray()
-  @IsOptional()
-  readonly modules?: string[]; // Optional array of modules (e.g., videos, lectures)
+  @IsString()
+  @IsNotEmpty()
+  category: string;
+
+  @IsEnum(['Beginner', 'Intermediate', 'Advanced'])
+  difficultyLevel: string;
+
+  @IsString()
+  @IsNotEmpty()
+  createdBy: string; // This would be the user ID of the instructor or creator
 }

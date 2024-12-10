@@ -1,7 +1,7 @@
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
-@Schema()
+@Schema({ timestamps: true }) // Enable timestamps
 export class Feedback extends Document {
   @Prop({ required: true })
   userId: string;
@@ -11,6 +11,9 @@ export class Feedback extends Document {
 
   @Prop({ required: true })
   feedback: string;
+
+  @Prop({ default: false })
+  isForFutureUpdates: boolean;
 }
 
 export const FeedbackSchema = SchemaFactory.createForClass(Feedback);
