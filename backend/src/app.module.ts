@@ -12,6 +12,8 @@ import { PythonIntegrationModule } from './python-service/python-integration.mod
 import { FeedbackModule } from './feedback/feedback.module';
 import { BackupModule } from './backup/backup.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { QuestionModule } from './question/question.module';
+import { QuizModule } from './quiz/quiz.module';
 
 @Module({
   imports: [
@@ -36,7 +38,9 @@ import { ScheduleModule } from '@nestjs/schedule';
     AuditLogModule,
     AdminModule,
     PythonIntegrationModule,
-    FeedbackModule
+    FeedbackModule,
+    QuestionModule,
+    QuizModule
     
   ],
 })
