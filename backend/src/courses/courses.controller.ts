@@ -12,21 +12,21 @@ import { diskStorage, Multer } from 'multer'; // Ensure this import is added at 
 export class CoursesController {
   constructor(private readonly coursesService: CoursesService) {}
 
-  // Create a new course (protected by role guard)
+
   @Post('create')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.INSTRUCTOR) 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.INSTRUCTOR) // Only Admins and Instructors can create courses
   async createCourse(@Body() createCourseDto: CreateCourseDto) {
     return this.coursesService.createCourse(createCourseDto);
   }
 
-  // Get all courses (no restriction)
   @Get()
   async getAllCourses() {
     return this.coursesService.getAllCourses();
   }
 
-  // Get a specific course by ID
   @Get(':id')
   async getCourseById(@Param('id') id: string) {
     return this.coursesService.getCourseById(id);
@@ -82,7 +82,7 @@ export class CoursesController {
     return this.coursesService.updateCourse(id, createCourseDto);
   }
 
-  // Delete a course by ID (protected by role guard)
+
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN) // Only Admins can delete courses

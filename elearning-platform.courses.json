@@ -1,0 +1,16 @@
+[{
+  "_id": {
+    "$oid": "6751adfbdca25805e6573771"
+  },
+  "title": "Introduction to NestJS",
+  "description": "Learn the basics of NestJS framework.",
+  "category": "Backend Development",
+  "difficultyLevel": "Beginner",
+  "createdBy": {
+    "$oid": "67509ba6a4b5d2df9ce183bd"
+  },
+  "createdAt": {
+    "$date": "2024-12-05T13:43:23.266Z"
+  },
+  "__v": 0
+}]

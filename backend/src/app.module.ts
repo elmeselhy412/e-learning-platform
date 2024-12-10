@@ -9,6 +9,11 @@ import { MulterModule } from '@nestjs/platform-express';
 import { AuditLogModule } from './auditlog/auditlog.module';
 import { AdminModule } from './Admin/admin.module';
 import { PythonIntegrationModule } from './python-service/python-integration.module';
+import { FeedbackModule } from './feedback/feedback.module';
+import { BackupModule } from './backup/backup.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { QuestionModule } from './question/question.module';
+import { QuizModule } from './quiz/quiz.module';
 
 @Module({
   imports: [
@@ -23,14 +28,19 @@ import { PythonIntegrationModule } from './python-service/python-integration.mod
     MulterModule.register({
       dest: './uploads', 
     }),
+    ScheduleModule.forRoot(), // Initialize the scheduling module
     CourseModule,
     AuthModule,
     UserModule,
+    BackupModule,
     StudyGroupModule,
     NotificationModule,
     AuditLogModule,
     AdminModule,
-    PythonIntegrationModule
+    PythonIntegrationModule,
+    FeedbackModule,
+    QuestionModule,
+    QuizModule
     
   ],
 })

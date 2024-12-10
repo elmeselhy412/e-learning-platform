@@ -15,4 +15,5 @@ export class NotificationController {
   async getAnnouncements() {
     return this.notificationService.getAnnouncements();
   }
+  
 }
