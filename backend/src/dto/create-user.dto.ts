@@ -18,7 +18,7 @@ export class CreateUserDto {
 
   @IsString()
   @MinLength(6)  // Ensure password is at least 6 characters long
-  readonly password: string;
+  readonly passwordHash: string;
 
   @IsEnum(UserRole)
   readonly role: UserRole;

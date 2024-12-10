@@ -51,14 +51,14 @@ export class UserService {
 
   // Create a new user
   async createUser(createUserDto: CreateUserDto) {
-    const { password, role, name, email } = createUserDto;
+    const { passwordHash, role, name, email } = createUserDto;
 
-    if (!password || !email || !role || !name) {
+    if (!passwordHash || !email || !role || !name) {
       throw new Error('Email, password, role, and name are required');
     }
 
     const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const hashedPassword = await bcrypt.hash(passwordHash, saltRounds);
 
     const newUser = new this.userModel({
       email,
@@ -120,42 +120,42 @@ export class UserService {
     return true;
   }
 
-  // Login and send OTP
-  // Login and send OTP
-async login(email: string, password: string): Promise<any> {
-  // Find the user by email
-  const user = await this.findOneByEmail(email);
-  if (!user) {
-    // Log "User not found" in FailedLogin collection
-    await new this.failedLoginModel({
-      username: email,
-      reason: 'User not found',
-      timestamp: new Date(),
-    }).save();
-    throw new UnauthorizedException('User not found');
+  async login(email: string, password: string): Promise<any> {
+    // Find the user by email
+    const user = await this.findOneByEmail(email);
+    if (!user) {
+      // Log "User not found" in FailedLogin collection
+      await new this.failedLoginModel({
+        username: email,
+        reason: 'User not found',
+        timestamp: new Date(),
+      }).save();
+      throw new UnauthorizedException('User not found');
+    }
+  
+    console.log('Password provided:', password); // Log provided password
+    console.log('Password hash in DB:', user.passwordHash); // Log stored passwordHash
+  
+    // Compare the provided password with the hashed password
+    const passwordMatch = await this.comparePasswords(password, user.passwordHash);
+    if (!passwordMatch) {
+      // Log "Invalid Password" in FailedLogin collection
+      await new this.failedLoginModel({
+        username: email,
+        reason: 'Invalid Password',
+        timestamp: new Date(),
+      }).save();
+      throw new UnauthorizedException('Incorrect password');
+    }
+  
+    // Generate and send OTP
+    const generatedOTP = this.generateOTP();
+    user.otp = generatedOTP;
+    await user.save();
+    await this.sendOtpEmail(user, generatedOTP);
+  
+    return { message: 'OTP sent to your email' };
   }
-
-  // Compare the provided password with the hashed password
-  const passwordMatch = await this.comparePasswords(password, user.passwordHash);
-  if (!passwordMatch) {
-    // Log "Invalid Password" in FailedLogin collection
-    await new this.failedLoginModel({
-      username: email,
-      reason: 'Invalid Password',
-      timestamp: new Date(),
-    }).save();
-    throw new UnauthorizedException('Incorrect password');
-  }
-
-  // Generate and send OTP
-  const generatedOTP = this.generateOTP();
-  user.otp = generatedOTP;
-  await user.save();
-  await this.sendOtpEmail(user, generatedOTP);
-
-  return { message: 'OTP sent to your email' };
-}
-
 
   // Verify OTP and complete login
   async verifyOtpAndLogin(email: string, otp: string): Promise<any> {
