@@ -1,0 +1,28 @@
+[{
+  "_id": {
+    "$oid": "67509ba6a4b5d2df9ce183bd"
+  },
+  "name": "test",
+  "email": "omarmagdy88766@gmail.com",
+  "passwordHash": "$2b$10$9pOnx1qYcO1MRR1vYEtZbOfFBfjaWYDLEqlECj4cqm/zeLzVC5df.",
+  "role": "instructor",
+  "profilePictureUrl": "https://example.com/new-profile-pic.jp",
+  "createdAt": {
+    "$date": "2024-12-04T18:12:54.907Z"
+  },
+  "__v": 3,
+  "courses": [
+    {
+      "$oid": "6751adfbdca25805e6573771"
+    }
+  ],
+  "otp": null,
+  "learningPreferences": [
+    "SE",
+    "DS"
+  ],
+  "subjectsOfInterest": [
+    "CS",
+    "CS2"
+  ]
+}]

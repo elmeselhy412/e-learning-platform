@@ -3,95 +3,76 @@ import {
   SubscribeMessage,
   MessageBody,
   ConnectedSocket,
-  WebSocketServer,
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { Server, Socket } from 'socket.io';
-import { MessageService } from '../messages/message.service';
+import { Socket } from 'socket.io';
 
-@WebSocketGateway(4000, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST'],
-  },
-})
+@WebSocketGateway()
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
-  @WebSocketServer()
-  server: Server;
-
-  private users = new Map<string, { role: string; userId: string }>();
-
-  constructor(private readonly messageService: MessageService) {}
+  private rooms: Map<string, Set<string>> = new Map();
 
   handleConnection(client: Socket) {
     console.log(`Client connected: ${client.id}`);
-
-    // Send chat history to the newly connected client
-    this.messageService.getMessages().then((messages) => {
-      client.emit('chat_history', messages);
-    });
-
-    this.server.emit('notification', {
-      message: `A new user has joined the chat.`,
-    });
   }
 
   handleDisconnect(client: Socket) {
     console.log(`Client disconnected: ${client.id}`);
-    const user = this.users.get(client.id);
-    this.users.delete(client.id);
-
-    this.server.emit('notification', {
-      message: `${user?.role || 'A user'} has left the chat.`,
-    });
+    this.leaveAllRooms(client);
   }
 
-  @SubscribeMessage('register_role')
-  handleRegisterRole(
-    @MessageBody() data: { role: string; userId: string },
+  // Join a specific room
+  @SubscribeMessage('join_room')
+  handleJoinRoom(
+    @MessageBody() data: { roomId: string },
     @ConnectedSocket() client: Socket,
-  ) {
-    console.log(`Role registered: ${data.role} for client ${client.id}`);
-    this.users.set(client.id, { role: data.role, userId: data.userId });
-  }
-
-  @SubscribeMessage('send_message')
-async handleMessage(
-  @MessageBody()
-  data: { userId: string; recipientId?: string; content: string; role?: string },
-  @ConnectedSocket() client: Socket,
-) {
-  console.log(`Message received from ${client.id}:`, data);
-
-  // Map userId to senderId and save message to the database
-  await this.messageService.saveMessage({
-    senderId: data.userId,
-    recipientId: data.recipientId,
-    content: data.content,
-  });
-
-  if (data.recipientId) {
-    // Private message
-    const recipient = Array.from(this.server.sockets.sockets.values()).find(
-      (socket) => this.users.get(socket.id)?.userId === data.recipientId,
-    );
-    if (recipient) {
-      recipient.emit('receive_message', data);
+  ): void {
+    const { roomId } = data;
+    if (!this.rooms.has(roomId)) {
+      this.rooms.set(roomId, new Set());
     }
-  } else if (data.role) {
-    // Broadcast to a specific role
-    this.server.sockets.sockets.forEach((socket) => {
-      if (this.users.get(socket.id)?.role === data.role) {
-        socket.emit('receive_message', data);
-      }
-    });
-  } else {
-    // Broadcast to everyone
-    this.server.emit('receive_message', data);
+    this.rooms.get(roomId)?.add(client.id);
+    client.join(roomId);
+    client.emit('joined_room', { roomId });
+    client.to(roomId).emit('user_joined', { userId: client.id, roomId });
+    console.log(`Client ${client.id} joined room ${roomId}`);
   }
 
-  return data;
-}
+  // Leave a specific room
+  @SubscribeMessage('leave_room')
+  handleLeaveRoom(
+    @MessageBody() data: { roomId: string },
+    @ConnectedSocket() client: Socket,
+  ): void {
+    const { roomId } = data;
+    this.rooms.get(roomId)?.delete(client.id);
+    client.leave(roomId);
+    client.emit('left_room', { roomId });
+    client.to(roomId).emit('user_left', { userId: client.id, roomId });
+    console.log(`Client ${client.id} left room ${roomId}`);
+  }
 
+  // Send notifications for replies or updates
+  @SubscribeMessage('send_message')
+  handleMessage(
+    @MessageBody() data: { roomId: string; message: string },
+    @ConnectedSocket() client: Socket,
+  ): void {
+    const { roomId, message } = data;
+    console.log(
+      `Message received in room ${roomId}: ${message} from ${client.id}`,
+    );
+    client.to(roomId).emit('new_message', { userId: client.id, message });
+  }
+
+  // Helper to leave all rooms when a user disconnects
+  private leaveAllRooms(client: Socket) {
+    for (const [roomId, participants] of this.rooms.entries()) {
+      if (participants.has(client.id)) {
+        participants.delete(client.id);
+        client.to(roomId).emit('user_left', { userId: client.id, roomId });
+        console.log(`Client ${client.id} left room ${roomId}`);
+      }
+    }
+  }
 }

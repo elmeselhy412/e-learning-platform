@@ -1,9 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
-import mongoose from 'mongoose';
+import { Document, Types } from 'mongoose';
+import mongoose from 'mongoose';  // Import mongoose to use ObjectId
+import { CourseModule } from '../courses/courses.module';
 
 @Schema()
-export class User extends Document {  // Inherit from Document to have Mongoose methods
+export class User extends Document {
   @Prop({ required: true })
   name: string;
 
@@ -16,14 +17,26 @@ export class User extends Document {  // Inherit from Document to have Mongoose 
   @Prop({ enum: ['student', 'instructor', 'admin'], required: true })
   role: string;
 
-  @Prop({ type: String, default: null })
+  @Prop({ type: String, default: null, required: false })
   profilePictureUrl?: string;
 
-  @Prop({ default: Date.now })
+  @Prop({ default: Date.now, required: false })
   createdAt: Date;
+
+  // Correctly using Schema.Types.ObjectId
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Course' }], default: [] })
+  courses: Types.ObjectId[]; // Stored as ObjectId in the database
+
+  
+  @Prop({ type: String, default: null }) // Field to store OTP
+  otp?: string;
+
+  @Prop({ type: [String], default: [], required: false })
+  learningPreferences: string[]; // Array of strings to store learning preferences
+
+  @Prop({ type: [String], default: [], required: false })
+  subjectsOfInterest: string[]; // Array of strings to store subjects of interest
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
-
-// This will automatically add _id to your schema
 export type UserDocument = User & Document;

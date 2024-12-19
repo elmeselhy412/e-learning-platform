@@ -1,13 +1,8 @@
-import { MongooseModule, Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
-import mongoose, { HydratedDocument } from 'mongoose';
-export type UserDocument = HydratedDocument<Course>;
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Document, Types } from 'mongoose';
 
 @Schema()
-export class Course {
-  @Prop({ required: true, unique: true })
-  courseId: string;
-
+export class Course extends Document {
   @Prop({ required: true })
   title: string;
 
@@ -17,14 +12,24 @@ export class Course {
   @Prop({ required: true })
   category: string;
 
-  @Prop({ enum: ['Beginner', 'Intermediate', 'Advanced'], required: true })
+  @Prop({ required: true })
   difficultyLevel: string;
 
-  @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, ref: 'User' })
-  createdBy: string; 
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  createdBy: Types.ObjectId; // Reference to the user who created the course
 
   @Prop({ default: Date.now })
   createdAt: Date;
+
+  @Prop({ required: false })
+  instructorId: string;
+
+  @Prop({ type: [String], default: [] }) // Array to store file paths
+  media: string[];
+  
+  @Prop({ required: false })
+  archived: boolean;
 }
 
 export const CourseSchema = SchemaFactory.createForClass(Course);
+export type CourseDocument = Course & Document;

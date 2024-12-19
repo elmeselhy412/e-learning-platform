@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { HydratedDocument } from 'mongoose';
+import mongoose, { HydratedDocument } from 'mongoose';
+
 export type UserDocument = HydratedDocument<Progress>;
 
 @Schema()
@@ -21,7 +22,13 @@ export class Progress extends Document {
   completionPercentage: number;
 
   @Prop({ default: Date.now })
-  lastUpdated: Date;
+  lastAccessed: Date;
+
+  @Prop({ type: [String], default: [] })
+  completedModules: string[]; // Stores completed module IDs
+
+  @Prop({ type: [Number], default: [] })
+  scores: number[]; // Stores quiz or assessment scores
 }
 
 export const ProgressSchema = SchemaFactory.createForClass(Progress);

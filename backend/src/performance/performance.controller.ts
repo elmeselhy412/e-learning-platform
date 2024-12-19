@@ -19,7 +19,6 @@ export class PerformanceController {
       moduleDto.courseId,
       moduleDto.moduleId,
     );
-    
   }
 
   @Post('/track-score')
@@ -29,12 +28,6 @@ export class PerformanceController {
       scoreDto.courseId,
       scoreDto.score,
     );
-  }
-  @Post('/track-engagement')
-  async trackEngagement(
-    @Body() body: { userId: string; courseId: string },
-  ): Promise<void> {
-    return this.performanceService.trackEngagement(body.userId, body.courseId);
   }
 
   @Get('/user/:userId/completion-rate/:courseId')
@@ -62,23 +55,5 @@ export class PerformanceController {
   @Get('/course/:courseId')
   async getCourseProgress(@Param('courseId') courseId: string) {
     return this.performanceService.getCourseProgress(courseId);
-  }
-
-  // New: Get engagement report for a course
-  @Get('/course/:courseId/engagement-report')
-  async getEngagementReport(@Param('courseId') courseId: string) {
-    return this.performanceService.getEngagementReport(courseId);
-  }
-
-  // New: Get performance report for a course
-  @Get('/course/:courseId/performance-report')
-  async getPerformanceReport(@Param('courseId') courseId: string) {
-    return this.performanceService.getPerformanceReport(courseId);
-  }
-
-  // New: Get insights for a course
-  @Get('/course/:courseId/insights')
-  async getCourseInsights(@Param('courseId') courseId: string) {
-    return this.performanceService.getCourseInsights(courseId);
   }
 }
