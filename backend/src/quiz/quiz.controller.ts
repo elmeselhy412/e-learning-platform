@@ -20,9 +20,10 @@ export class QuizController {
 
   }
   @Post('create')
-    async createQuiz(@Body() createQuizDto: CreateQuizDto) {
-      return this.quizService.createQuiz(createQuizDto);
-  }
+async createQuiz(@Body() createQuizDto: CreateQuizDto) {
+  return this.quizService.createQuiz(createQuizDto);
+}
+
   @Get('question/:userId')
   async getQuestion(@Param('userId') userId: string, @Body() userPerformance: UserPerformanceDto) {
     // Adjust difficulty based on user's performance
