@@ -7,7 +7,7 @@ import axios from 'axios';
 
 export default function VerifyOTP() {
   const router = useRouter();
-  const { email } = useUserContext(); // Retrieve email from context
+  const { email, setUserId,setRole } = useUserContext(); // Retrieve email and setRole from context
 
   const [formData, setFormData] = useState({
     email: '',
@@ -32,12 +32,28 @@ export default function VerifyOTP() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await axios.post('http://localhost:4000/users/verify-otp', formData);
+      const response = await axios.post('http://localhost:4000/users/verify-otp', formData);
+        // Extract email and role from the response
+        const {userId, role } = response.data;
+
+        // Save role in context
+        setRole(role);
+        localStorage.setItem('userId', userId);
+        setUserId(userId); // Save userId in context
+        console.log(userId);
+        console.log(role);
       setMessage('OTP verified successfully! Redirecting to homepage...');
-      setTimeout(() => {
-        router.push('/homepage');
-      }, 2000);
-    } catch (error) {
+      if (role === 'admin') {
+        router.push('/admin/home');
+      } else if (role === 'instructor') {
+        router.push('/instructor/home');
+      } else if (role === 'student') {
+        router.push('/student/home');
+      } else {
+        setMessage('Invalid role. Contact support.');
+      }
+      }
+     catch (error) {
       console.error('OTP verification failed:', error);
       setMessage('Incorrect OTP. Please try again.');
     }

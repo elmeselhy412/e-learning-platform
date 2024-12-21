@@ -23,12 +23,6 @@ export class Progress extends Document {
 
   @Prop({ default: Date.now })
   lastAccessed: Date;
-
-  @Prop({ type: [String], default: [] })
-  completedModules: string[]; // Stores completed module IDs
-
-  @Prop({ type: [Number], default: [] })
-  scores: number[]; // Stores quiz or assessment scores
 }
 
 export const ProgressSchema = SchemaFactory.createForClass(Progress);

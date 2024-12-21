@@ -1,5 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';  // Make sure this imports the correct AppModule
+import mongoose from 'mongoose';
+
 async function bootstrap() {
   mongoose.connect('mongodb://localhost:27017/elearning-platform', {
     serverSelectionTimeoutMS: 3000000, // Increase timeout to 30 seconds

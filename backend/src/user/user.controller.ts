@@ -53,8 +53,14 @@ export class UserController {
   async verifyOtp(@Body() verifyDto: { email: string; otp: string }) {
     try {
       const result = await this.userService.verifyOtpAndLogin(verifyDto.email, verifyDto.otp);
-      return result;
-    } catch (error) {
+      console.log(result);
+      return {
+        success: true,
+        email: result.email,
+        role: result.role, // Ensure `role` exists in your user entity
+        userId: result.userId
+
+      };    } catch (error) {
       console.error('Error during OTP verification:', error);
       throw new HttpException(error.message, HttpStatus.UNAUTHORIZED);
     }

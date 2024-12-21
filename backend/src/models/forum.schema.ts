@@ -1,11 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
-import { User } from './user.schema';
 
 @Schema({ timestamps: true })
-export class Chat extends Document {
-  @Prop({ required: true})
-  instructorId: string;
+export class Forum extends Document {
+//   @Prop({ required: true })
+//   instructorId: string;
 
   @Prop({ required: true })
   topic: string;
@@ -27,4 +26,4 @@ export class Chat extends Document {
   }>;
 }
 
-export const ChatSchema = SchemaFactory.createForClass(Chat);
+export const ForumSchema = SchemaFactory.createForClass(Forum);

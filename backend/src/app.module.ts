@@ -17,6 +17,7 @@ import { QuizModule } from './quiz/quiz.module';
 import { ChatModule } from './chat/chat.module';
 import { ChatGateway } from './chat/chat.gateway';
 import { MessageService } from './messages/message.service';
+import { ForumModule } from './forum/forum.module';
 
 @Module({
   imports: [
@@ -45,9 +46,8 @@ import { MessageService } from './messages/message.service';
     QuestionModule,
     QuizModule,
     ChatModule,
-    ChatGateway,
-    MessageService,
-    
+    ChatGateway,    
+    ForumModule
   ],
 })
 export class AppModule {}

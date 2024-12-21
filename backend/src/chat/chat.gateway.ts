@@ -13,6 +13,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private rooms: Map<string, Set<string>> = new Map();
 
   handleConnection(client: Socket) {
+    
     console.log(`Client connected: ${client.id}`);
   }
 

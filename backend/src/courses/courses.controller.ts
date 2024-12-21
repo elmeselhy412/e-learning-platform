@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Delete, UseGuards, UseInterceptors, UploadedFiles, Req, NotFoundException } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Delete, UseGuards, UseInterceptors, UploadedFiles, Req, NotFoundException, Query, HttpException, HttpStatus } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from '../dto/create-course.dto'; // Import DTO
 import { Roles } from '../auth/roles.decorator'; // Import Roles Decorator
@@ -135,4 +135,34 @@ async uploadMedia(
     // Call the service to append media to the course
     return this.coursesService.addMediaToCourse(courseId, loggedInInstructorId, mediaPaths);
   }
+  @Get('search-courses')
+  async searchCourses(@Query('topic') topic?: string, @Query('instructor') instructor?: string) {
+    try {
+      const courses = await this.coursesService.searchCourses({ topic, instructor });
+      return { courses };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+  
+@Get('enrolled-courses/:userId')
+async getEnrolledCourses(@Param('userId') userId: string) {
+  try {
+    const courses = await this.coursesService.getUserEnrolledCourses(userId);
+    return { courses };
+  } catch (error) {
+    throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+  }
+}
+
+@Post('enroll')
+async enrollStudent(@Body() { userId, courseId }: { userId: string; courseId: string }) {
+  try {
+    const result = await this.coursesService.enrollStudentInCourse(userId, courseId);
+    return result;
+  } catch (error) {
+    throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+  }
+}
+
 }
