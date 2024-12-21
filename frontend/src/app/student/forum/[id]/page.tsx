@@ -22,8 +22,8 @@ export default function ForumPage() {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const userId = localStorage.getItem('userId')
-  console.log(localStorage.getItem('userId'))
-  console.log(userId);
+  // console.log(localStorage.getItem('userId'))
+  // console.log(userId);
   
   useEffect(() => {
     async function fetchForum() {

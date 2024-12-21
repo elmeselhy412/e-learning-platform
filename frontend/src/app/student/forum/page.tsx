@@ -14,8 +14,7 @@ export default function StudentChat() {
   const [forums, setForums] = useState<Forum[]>([]);
   const router = useRouter(); // Use router for navigation  
 localStorage.getItem('userId')
-console.log(localStorage.getItem('userId')
-)
+// console.log(localStorage.getItem('userId'))
   // Fetch all forums
   useEffect(() => {
     async function fetchForums() {

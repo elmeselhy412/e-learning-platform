@@ -18,7 +18,7 @@ export default function StudentHome() {
   const [courses, setCourses] = useState<Course[]>([]); // Initialize courses state
   const [searchParams, setSearchParams] = useState({ topic: '', instructor: '' });
   const [message, setMessage] = useState('');
-console.log(userId);
+// console.log(userId);
   useEffect(() => {
     fetchCourses(); // Fetch courses on component mount
   }, []);
