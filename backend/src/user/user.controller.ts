@@ -10,6 +10,7 @@ import { UpdateProfileDto } from 'src/dto/update-profile.dto';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { FailedLoginService } from './failed.login.service';
+import{UpdateProfileByInstructorDto} from 'src/dto/update-profile-by-instructor.dto'
 
 @Controller('users') // Base path for user-related routes
 export class UserController {
@@ -96,13 +97,26 @@ export class UserController {
       );
     }
   }
-  @Patch(':id')
-  async updateUserProfile(
-    @Param('id') id: string,
-    @Body() updateProfileDto: UpdateProfileDto,
-  ) {
-    return this.userService.updateUserProfile(id, updateProfileDto);
-  }
+ @Patch(':id')
+async updateUserProfile(
+  @Param('id') id: string,
+  @Body() updateProfileDto: UpdateProfileDto,
+) {
+  return this.userService.updateUserProfile(id, updateProfileDto);
+}
+
+@Patch('updateInstructor/:id')
+async updateInstructorProfile(
+  @Param('id') id: string,
+  @Body() updateProfileByInstructorDto: UpdateProfileByInstructorDto,
+) {
+  const updatedUser = await this.userService.updateInstructorProfile(id, updateProfileByInstructorDto);
+  return updatedUser; // Return the updated user object
+}
+
+
+
+
   @Get('students')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
