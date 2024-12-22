@@ -178,6 +178,7 @@ export class UserService {
       userId: user._id.toString(), // Convert ObjectId to string
       email: user.email,
       role: user.role,
+      token:token,
     };
   }
   

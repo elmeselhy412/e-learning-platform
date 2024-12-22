@@ -15,31 +15,59 @@ type Course = {
 };
 
 export default function StudentHome() {
-  const { userId } = useUserContext(); // Retrieve user ID from context
-  const [courses, setCourses] = useState<Course[]>([]); // Initialize courses state
+  // const { userId } = useUserContext(); // Retrieve user ID from context
+  const [courses, setCourses] = useState<Course[]>([]); // Initialize as an empty array
   const [searchParams, setSearchParams] = useState({ topic: '', instructor: '' });
   const [message, setMessage] = useState('');
+  const [enrolledCourses, setEnrolledCourses] = useState<string[]>([]); // List of enrolled course IDs
   const router = useRouter(); // Initialize router for navigation
+const userId = localStorage.getItem('userId');
+console.log(userId);
 
-// console.log(userId);
-  useEffect(() => {
-    fetchCourses(); // Fetch courses on component mount
-  }, []);
+useEffect(() => {
+  fetchCourses();
+  if (userId) {
+    fetchEnrolledCourses();
+  }
+}, [userId]);
 
-  // Fetch courses based on search parameters
-  const fetchCourses = async () => {
-    try {
-      const response = await axios.get('http://localhost:4000/courses/search-courses', {
-        params: searchParams,
-      });
-      setCourses(response.data.courses);
-      setMessage(''); // Clear any existing message
-    } catch (error) {
-      console.error('Error fetching courses:', error);
-      setMessage('Failed to load courses. Please try again later.');
-    }
-  };
+const fetchCourses = async () => {
+  try {
+    const response = await axios.get('http://localhost:4000/courses');
+    setCourses(response.data.map((course: any) => ({ ...course, _id: course._id.toString() })));
+    setMessage('');
+  } catch (error) {
+    console.error('Error fetching courses:', error);
+    setMessage('Failed to load courses. Please try again later.');
+  }
+};
 
+const fetchEnrolledCourses = async () => {
+  try {
+    const response = await axios.get(`http://localhost:4000/courses/enrolled-courses/${userId}`);
+    console.log('Enrolled Courses:', response.data.courses);
+    setEnrolledCourses(response.data.courses); // Ensure backend sends strings
+  } catch (error) {
+    console.error('Error fetching enrolled courses:', error);
+    setEnrolledCourses([]);
+    setMessage('Failed to load enrolled courses. Please try again later.');
+  }
+};
+
+const handleEnroll = async (courseId: string) => {
+  if (!userId) {
+    setMessage('User not logged in.');
+    return;
+  }
+  try {
+    const response = await axios.post('http://localhost:4000/courses/enroll', { userId, courseId });
+    setMessage(response.data.message || 'Successfully enrolled in the course!');
+    fetchEnrolledCourses();
+  } catch (error) {
+    console.error('Error enrolling in course:', error);
+    setMessage('User Already Enrolled.');
+  }
+};
   // Handle changes in search input fields
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -52,19 +80,6 @@ export default function StudentHome() {
     fetchCourses(); // Fetch courses with updated search params
   };
 
-  // Handle course enrollment
-  const handleEnroll = async (courseId: string) => {
-    try {
-      const response = await axios.post('http://localhost:4000/courses/enroll', {
-        userId,
-        courseId,
-      });
-      setMessage(response.data.message);
-    } catch (error) {
-      console.error('Error enrolling in course:', error);
-      setMessage('Failed to enroll in the course. Please try again.');
-    }
-  };
 
   const handleDashboardRedirect = () => {
     router.push('/course/dashboard'); // Navigate to the dashboard page
@@ -166,33 +181,32 @@ export default function StudentHome() {
       {message && <div className="alert alert-info text-center">{message}</div>}
 
       {/* Display Courses */}
-      <div className="row">
-        {courses.length > 0 ? (
-          courses.map((course) => (
-            <div key={course._id} className="col-md-4 mb-4">
-              <div className="card h-100">
-                <div className="card-body">
-                  <h5 className="card-title">{course.title}</h5>
-                  <p className="card-text">{course.description}</p>
-                  <p className="card-text">
-                    <small className="text-muted">Category: {course.category}</small>
-                  </p>
-                  <p className="card-text">
-                    <small className="text-muted">Difficulty: {course.difficultyLevel}</small>
-                  </p>
-                  <button
-                    className="btn btn-success w-100"
-                    onClick={() => handleEnroll(course._id)}
-                  >
-                    Enroll
-                  </button>
+     <div className="row">
+     {courses && courses.length > 0 ? (
+          courses.map((course) => {
+            const isEnrolled = enrolledCourses.includes(course._id); // Proper comparison
+            console.log('Course ID:', course._id, 'Is Enrolled:', isEnrolled);
+            return (
+              <div key={course._id} className="col-md-4 mb-4">
+                <div className="card h-100">
+                  <div className="card-body">
+                    <h5 className="card-title">{course.title}</h5>
+                    <p className="card-text">{course.description}</p>
+                    <button
+                      className={`btn ${isEnrolled ? 'btn-secondary' : 'btn-success'} w-100`}
+                      onClick={() => handleEnroll(course._id)}
+                    >
+                      {isEnrolled ? 'Enrolled' : 'Enroll'}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         ) : (
-          <p className="text-center">No courses found. Try different search criteria.</p>
+          <p className="text-center">No courses available at the moment.</p>
         )}
+
       </div>
     </div>
   );

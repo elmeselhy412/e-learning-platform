@@ -31,55 +31,11 @@ export class CoursesService {
 
     return newCourse.save();
   }
-  /**
-   * Get all courses
-   */
-  getAllCourses(): any[] {
-    // Placeholder for fetching all courses
-    return [
-      { id: '1234', name: 'Course 1', description: 'Introductory course' },
-      { id: '5678', name: 'Course 2', description: 'Advanced course' },
-    ];
+  async getAllCourses() {
+    return this.courseModel.find().exec();
   }
-
-  /**
-   * Get a course by ID
-   */
-  getCourseById(id: string): any {
-    const courses = this.getAllCourses();
-    const course = courses.find((c) => c.id === id);
-    if (!course) throw new NotFoundException(`Course with ID ${id} not found`);
-    return course;
-  }
-
-  /**
-   * Update a course
-   */
-  updateCourse(id: string, createCourseDto: CreateCourseDto): any {
-    const course = this.getCourseById(id);
-    return { ...course, ...createCourseDto };
-  }
-
-  /**
-   * Delete a course
-   */
-  deleteCourse(id: string): string {
-    const courses = this.getAllCourses();
-    const courseIndex = courses.findIndex((c) => c.id === id);
-
-    if (courseIndex === -1) {
-      throw new NotFoundException(`Course with ID ${id} not found`);
-    }
-
-    // Simulate deletion
-    courses.splice(courseIndex, 1);
-
-    return `Course with ID ${id} deleted successfully`;
-  }
-
-  /**
-   * Adjust and optimize courses based on feedback and performance data
-   */
+  
+  
   async adjustAndOptimizeCourses(
     folderPath: string,
     feedbackData: Record<string, any>,

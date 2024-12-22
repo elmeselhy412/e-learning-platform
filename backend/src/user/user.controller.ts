@@ -201,5 +201,6 @@ export class UserController {
   async getFailedLogins() {
     return this.failedLoginService.getFailedLogins();
   }
+  
 
 }
