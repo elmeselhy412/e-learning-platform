@@ -22,16 +22,20 @@ export class ModuleController {
   async getModulesByCourse(@Param('courseId') courseId: string) {
     return this.moduleService.getModulesByCourse(courseId);
   }
-
+  @Get('/')
+  async getAllModules(){
+    return this.moduleService.getAllModules();
+  }
   @Put(':moduleId')
   async updateModule(@Param('moduleId') moduleId: string, @Body() updateDto: Partial<Module>) {
     return this.moduleService.updateModule(moduleId, updateDto);
   }
-
+  
   @Delete(':moduleId')
   async deleteModule(@Param('moduleId') moduleId: string) {
     return this.moduleService.deleteModule(moduleId);
   }
+  
   @Post(':moduleId/upload-media')
 @UseInterceptors(
   FilesInterceptor('files', 10, {

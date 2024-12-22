@@ -19,6 +19,7 @@ import { ChatGateway } from './chat/chat.gateway';
 import { MessageService } from './messages/message.service';
 import { ForumModule } from './forum/forum.module';
 import { PerformanceModule } from './performance/performance.module';
+import { ModulesModule } from './modules/modules.module';
 
 @Module({
   imports: [
@@ -49,7 +50,8 @@ import { PerformanceModule } from './performance/performance.module';
     ChatModule,
     ChatGateway,    
     ForumModule,
-    PerformanceModule
+    PerformanceModule,
+    ModulesModule
   ],
 })
 export class AppModule {}

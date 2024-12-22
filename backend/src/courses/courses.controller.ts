@@ -18,10 +18,6 @@ export class CoursesController {
 
 
   @Post('create')
-  @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.INSTRUCTOR) 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.INSTRUCTOR) // Only Admins and Instructors can create courses
   async createCourse(@Body() createCourseDto: CreateCourseDto) {
     return this.coursesService.createCourse(createCourseDto);
   }
@@ -105,37 +101,45 @@ export class CoursesController {
   ) {
     return this.coursesService.adjustAndOptimizeCourses(folderPath, feedbackData, performanceData);
   }
+
+
   @Post(':courseId/upload-media')
-@UseGuards(JwtAuthGuard, RolesGuard)
-@Roles(UserRole.INSTRUCTOR)
-@UseInterceptors(
-  FilesInterceptor('files', 10, {
-    storage: diskStorage({
-      destination: './uploads/courses',
-      filename: (req, file, callback) => {
-        const extension = file.originalname.split('.').pop();
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-        const filename = `${uniqueSuffix}.${extension}`;
-        callback(null, filename);
-      },
+  @UseInterceptors(
+    FilesInterceptor('files', 10, {
+      storage: diskStorage({
+        destination: './uploads/courses',
+        filename: (req, file, callback) => {
+          const extension = file.originalname.split('.').pop();
+          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+          const filename = `${uniqueSuffix}.${extension}`;
+          callback(null, filename);
+        },
+      }),
     }),
-  }),
-)
-async uploadMedia(
-  @Param('courseId') courseId: string,
-  @UploadedFiles() files: Array<Express.Multer.File>,
-  @Req() req: any,
-) {
-  if (!files || files.length === 0) {
-    throw new NotFoundException('No files uploaded.');
+  )
+  async uploadMedia(
+    @Param('courseId') courseId: string,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+    @Req() req: any,
+  ) {
+    // Validate uploaded files
+    if (!files || files.length === 0) {
+      throw new NotFoundException('No files uploaded.');
+    }
+
+
+    // Generate file paths for uploaded media
+    const mediaPaths = files.map((file) => `/uploads/courses/${file.filename}`);
+
+    // Call service to add media to the course
+    return this.coursesService.addMediaToCourse(courseId, mediaPaths);
   }
 
-  const loggedInInstructorId = req.user.userId;
+ 
 
-  // Validate course existence and instructor ownership
-  const mediaPaths = files.map((file) => `/uploads/courses/${file.filename}`);
-  return this.coursesService.addMediaToCourse(courseId, loggedInInstructorId, mediaPaths);
-}
+
+
+
   @Get('search-courses')
   async searchCourses(@Query('topic') topic?: string, @Query('instructor') instructor?: string) {
     try {

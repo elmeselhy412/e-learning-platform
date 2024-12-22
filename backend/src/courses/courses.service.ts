@@ -154,24 +154,26 @@ export class CoursesService {
 
     await this.noteModel.findByIdAndDelete(id);
   }
-  async addMediaToCourse(courseId: string, instructorId: string, mediaPaths: string[]): Promise<Course> {
+  
+
+  async addMediaToCourse(
+    courseId: string,
+    mediaPaths: string[],
+  ): Promise<Course> {
     // Find the course by its ID
     const course = await this.courseModel.findById(courseId).exec();
     if (!course) {
       throw new NotFoundException(`Course with ID ${courseId} not found.`);
     }
-  
-    // Check if the logged-in instructor matches the course instructor
-    if (course.instructorId !== instructorId) {
-      throw new ForbiddenException(`You are not authorized to modify this course.`);
-    }
-  
+
     // Append the new media paths to the existing media array
     course.media.push(...mediaPaths);
-  
+
     // Save and return the updated course document
     return course.save();
   }
+
+
   async searchCourses(filters: { topic?: string; instructor?: string }) {
     const query: any = {};
     if (filters.topic) query.category = { $regex: filters.topic, $options: 'i' }; // Match category by topic

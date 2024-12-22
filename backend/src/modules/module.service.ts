@@ -17,9 +17,10 @@ export class ModuleService {
       throw error;
     }
   }
-  
-  
-  
+  async getAllModules(){
+    return this.moduleModel.find().exec();
+  }
+ 
 
   // Get all modules for a specific course
   async getModulesByCourse(courseId: string) {
@@ -27,22 +28,23 @@ export class ModuleService {
   }
 
   // Update a module
-  async updateModule(moduleId: string, updateDto: Partial<Module>) {
-    const updatedModule = await this.moduleModel.findOneAndUpdate(
-      { moduleId },
-      { $set: updateDto },
-      { new: true },
-    );
-    if (!updatedModule) throw new NotFoundException(`Module with ID ${moduleId} not found.`);
-    return updatedModule;
-  }
+async updateModule(moduleId: string, updateDto: Partial<Module>) {
+  const updatedModule = await this.moduleModel.findByIdAndUpdate(
+    moduleId, // Use `findByIdAndUpdate` to match MongoDB's `_id`
+    { $set: updateDto },
+    { new: true },
+  );
+  if (!updatedModule) throw new NotFoundException(`Module with ID ${moduleId} not found.`);
+  return updatedModule;
+}
 
-  // Delete a module
-  async deleteModule(moduleId: string) {
-    const deletedModule = await this.moduleModel.findOneAndDelete({ moduleId });
-    if (!deletedModule) throw new NotFoundException(`Module with ID ${moduleId} not found.`);
-    return { message: 'Module deleted successfully', deletedModule };
-  }
+// Delete a module
+async deleteModule(moduleId: string) {
+  const deletedModule = await this.moduleModel.findByIdAndDelete(moduleId); // Use `findByIdAndDelete` for `_id`
+  if (!deletedModule) throw new NotFoundException(`Module with ID ${moduleId} not found.`);
+  return { message: 'Module deleted successfully', deletedModule };
+}
+
   // Uploading MultiMedia Content 
   async addMediaToModule(moduleId: string, mediaPaths: string[]): Promise<Module> {
     const module = await this.moduleModel.findOne({ moduleId }).exec();
