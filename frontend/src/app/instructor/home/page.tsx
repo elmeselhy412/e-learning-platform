@@ -13,7 +13,7 @@ export default function CompleteProfile() {
     const fetchUserProfile = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:4000/users/${userId}` // Adjust the endpoint if needed
+          `http://localhost:4000/users/instructor/${userId}` // Adjust the endpoint if needed
         );
         const { expertise, teachingInterests } = response.data;
 

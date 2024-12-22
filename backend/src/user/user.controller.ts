@@ -1,5 +1,5 @@
 // src/user/user.controller.ts
-import { Body, Controller, Post, Get, HttpException, HttpStatus, UseGuards, Query, Put, Patch, Param, Delete } from '@nestjs/common';
+import { Body, Controller, Post, Get, HttpException, HttpStatus, UseGuards, Query, Put, Patch, Param, Delete, NotFoundException } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto, UserRole } from '../dto/create-user.dto'; // Import DTO for user registration
 import { EnrollCourseDto } from '../dto/enroll-course.dto'; // Import DTO for course enrollment
@@ -215,6 +215,18 @@ async updateInstructorProfile(
   async getFailedLogins() {
     return this.failedLoginService.getFailedLogins();
   }
+  @Get('instructor/:id')
+  async getInstructorProfile(@Param('id') id: string) {
+    const user = await this.userService.getUserById(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
   
-
+    return {
+      expertise: user.expertise || [],
+      teachingInterests: user.teachingInterests || [],
+    };
+  }
+  
+  
 }

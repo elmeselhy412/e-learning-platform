@@ -186,7 +186,7 @@ export class UserService {
   
     async getUserById(userId: string) {
       try {
-        const user = await this.userModel.findById(userId).select('name');
+        const user = await this.userModel.findById(userId);
         return user; // Ensure it returns the user document
       } catch (error) {
         console.error(`Error fetching user by ID: ${userId}`, error);
