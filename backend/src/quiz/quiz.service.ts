@@ -1,6 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { isValidObjectId, Model } from 'mongoose';
 import { Quiz } from '../models/quiz.schema';
 import { CreateQuizDto } from '../dto/create-quiz.dto';
 import { UserPerformanceDto } from '../dto/user-performance.dto';  // Importing the DTO
@@ -13,32 +13,51 @@ export class QuizService {
     @InjectModel('Question') private readonly questionModel: Model<Question>, // Inject QuestionModel
   ) {}
   // Get the next adaptive question
-  async getNextQuestion(_id: string, performance: { correctAnswers: number; totalQuestions: number }) {
-    const quiz = await this.quizModel.findOne({ _id }).exec();
-    if (!quiz) throw new NotFoundException(`Quiz with ID ${_id} not found.`);
-
-    const { correctAnswers, totalQuestions } = performance;
-    const accuracy = correctAnswers / totalQuestions;
-
-    let difficulty: string;
-    if (accuracy >= 0.8) difficulty = 'hard'; // High accuracy -> Hard question
-    else if (accuracy >= 0.5) difficulty = 'medium'; // Moderate accuracy -> Medium question
-    else difficulty = 'easy'; // Low accuracy -> Easy question
-
-    const filteredQuestions = quiz.questions.filter((q) => q.difficulty === difficulty);
-
-    if (filteredQuestions.length === 0) {
-      throw new NotFoundException(`No questions available for difficulty level: ${difficulty}`);
+  async getNextQuestion(
+    _id: string,
+    performance: { correctAnswers: number; totalQuestions: number }
+  ) {
+    if (!isValidObjectId(_id)) {
+      throw new BadRequestException(`Invalid quiz ID: ${_id}`);
     }
-
+  
+    const quiz = await this.quizModel.findOne({ _id }).exec();
+    if (!quiz) {
+      throw new NotFoundException(`Quiz with ID ${_id} not found.`);
+    }
+  
+    const { correctAnswers, totalQuestions } = performance;
+    const accuracy = totalQuestions > 0 ? correctAnswers / totalQuestions : 0;
+  
+    let difficulty: string;
+    if (accuracy >= 0.8) difficulty = 'hard';
+    else if (accuracy >= 0.5) difficulty = 'medium';
+    else difficulty = 'easy';
+  
+    const filteredQuestions = quiz.questions.filter(
+      (q) => q.difficulty === difficulty
+    );
+  
+    if (filteredQuestions.length === 0) {
+      throw new NotFoundException(
+        `No questions available for difficulty level: ${difficulty}`
+      );
+    }
+  
     const randomIndex = Math.floor(Math.random() * filteredQuestions.length);
-    return filteredQuestions[randomIndex];
+    return { nextQuestion: filteredQuestions[randomIndex] };
   }
 
-  async createQuiz(createQuizDto: CreateQuizDto): Promise<Quiz> {
+  async createQuiz(createQuizDto: CreateQuizDto) {
     const newQuiz = new this.quizModel(createQuizDto);
-    return newQuiz.save();
+    try {
+      return await newQuiz.save();
+    } catch (error) {
+      console.error('Error creating quiz:', error.message);
+      throw new BadRequestException('Failed to create quiz.');
+    }
   }
+  
   async getQuestionByDifficulty(difficulty: string): Promise<Question> {
     return await this.questionModel
       .findOne({ difficulty })

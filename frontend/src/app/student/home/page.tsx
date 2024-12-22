@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useUserContext } from '../../context/UserContext';
+import { useRouter } from 'next/navigation';
 
 // Define a Course type
 type Course = {
@@ -18,6 +19,8 @@ export default function StudentHome() {
   const [courses, setCourses] = useState<Course[]>([]); // Initialize courses state
   const [searchParams, setSearchParams] = useState({ topic: '', instructor: '' });
   const [message, setMessage] = useState('');
+  const router = useRouter(); // Initialize router for navigation
+
 // console.log(userId);
   useEffect(() => {
     fetchCourses(); // Fetch courses on component mount
@@ -63,6 +66,14 @@ export default function StudentHome() {
     }
   };
 
+  const handleDashboardRedirect = () => {
+    router.push('/course/dashboard'); // Navigate to the dashboard page
+  };
+
+  const handleQuizRedirect = () => {
+    router.push('/quiz'); // Navigate to the quiz page
+  };
+
   return (
     <div className="container mt-5">
       <div className="d-flex justify-content-between align-items-center">
@@ -70,15 +81,56 @@ export default function StudentHome() {
           <h1 className="text-center mb-4">Browse and Enroll in Courses</h1>
         </div>
         <div>
-        <button onClick={() => {
+        <button
+        onClick={() => {
           window.location.replace('/student/forum');
-        }} className="btn btn-primary w-100">
-              Forum
-            </button>
+        }}
+        style={{
+          width: '200px', // Increased the width
+          padding: '10px', // Optional: Add padding for better appearance
+        }}
+        className="btn btn-primary w-100"
+      >
+        Forum
+      </button>
+        
         </div>
-
+ 
       </div>
+      <div>
+        <button
+          onClick={handleDashboardRedirect}
+          style={{
+            marginTop: '20px',
+            padding: '10px 20px',
+            backgroundColor: '#007bff',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            marginRight: '10px',
+            marginBottom:"20px"
 
+          }}
+        >
+          Go to Dashboard
+        </button>
+        <button
+          onClick={handleQuizRedirect}
+          style={{
+            marginTop: '20px',
+            padding: '10px 20px',
+            backgroundColor: '#28a745',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            marginBottom:"20px"
+          }}
+        >
+          Start Quiz
+        </button>
+      </div>
       {/* Search Form */}
       <form className="mb-4" onSubmit={handleSearch}>
         <div className="row g-3">

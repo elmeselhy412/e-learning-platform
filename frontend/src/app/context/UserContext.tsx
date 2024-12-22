@@ -15,16 +15,28 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 export function UserProvider({ children }: { children: ReactNode }) {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
-  const [userId, setUserId] = useState(() => {
-    // Initialize from localStorage
-    return localStorage.getItem('userId') || '';
-  });
+  const [userId, setUserId] = useState('');
+  const [isClient, setIsClient] = useState(false);
+
+  // Ensure rendering only happens on the client
+  useEffect(() => {
+    setIsClient(true);
+    const storedUserId = localStorage.getItem('userId');
+    if (storedUserId) {
+      setUserId(storedUserId);
+    }
+  }, []);
 
   useEffect(() => {
     if (userId) {
       localStorage.setItem('userId', userId); // Persist userId
     }
   }, [userId]);
+
+  // Render nothing on the server to prevent hydration mismatch
+  if (!isClient) {
+    return null;
+  }
 
   return (
     <UserContext.Provider value={{ email, setEmail, role, setRole, userId, setUserId }}>
