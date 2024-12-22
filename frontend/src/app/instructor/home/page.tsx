@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import CompleteProfileModal from '../completeProfile/page'; // Import the modal component
+import CompleteProfileModal from '../completeProfile/CompleteProfileModal'; // Import the modal component
 
 export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);

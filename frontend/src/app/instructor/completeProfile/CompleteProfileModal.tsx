@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import styles from './CompleteProfile.module.css'; // Import the CSS module
 
 type CompleteProfileModalProps = {
   onClose: () => void;
@@ -70,16 +71,22 @@ export default function CompleteProfileModal({ onClose }: CompleteProfileModalPr
     }
   };
 
+  const handleClickOutside = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).classList.contains(styles['modal-overlay'])) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="modal-overlay">
-      <div className="modal-container">
-        <div className="modal-header">
+    <div className={styles['modal-overlay']} onClick={handleClickOutside}>
+      <div className={styles['modal-container']}>
+        <div className={styles['modal-header']}>
           <h2>Complete Your Profile</h2>
-          <button className="btn-close" onClick={onClose}>
+          <button className={styles['btn-close']} onClick={onClose}>
             ✕
           </button>
         </div>
-        {message && <div className="alert alert-info">{message}</div>}
+        {message && <div className={styles.alert}>{message}</div>}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label htmlFor="expertise" className="form-label">
@@ -88,7 +95,7 @@ export default function CompleteProfileModal({ onClose }: CompleteProfileModalPr
             <input
               type="text"
               id="expertise"
-              className="form-control"
+              className={`form-control ${styles['form-control']}`}
               placeholder="Add expertise (e.g., React, Machine Learning)"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && e.currentTarget.value.trim()) {
@@ -102,8 +109,7 @@ export default function CompleteProfileModal({ onClose }: CompleteProfileModalPr
               {expertise.map((item, index) => (
                 <span
                   key={index}
-                  className="badge bg-primary me-2"
-                  style={{ cursor: 'pointer' }}
+                  className={`badge bg-primary ${styles.badge}`}
                   onClick={() => handleRemoveExpertise(index)}
                 >
                   {item} ✕
@@ -119,7 +125,7 @@ export default function CompleteProfileModal({ onClose }: CompleteProfileModalPr
             <input
               type="text"
               id="teachingInterests"
-              className="form-control"
+              className={`form-control ${styles['form-control']}`}
               placeholder="Add teaching interest (e.g., Web Development)"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && e.currentTarget.value.trim()) {
@@ -133,8 +139,7 @@ export default function CompleteProfileModal({ onClose }: CompleteProfileModalPr
               {teachingInterests.map((item, index) => (
                 <span
                   key={index}
-                  className="badge bg-success me-2"
-                  style={{ cursor: 'pointer' }}
+                  className={`badge bg-success ${styles.badge}`}
                   onClick={() => handleRemoveTeachingInterest(index)}
                 >
                   {item} ✕
@@ -143,7 +148,7 @@ export default function CompleteProfileModal({ onClose }: CompleteProfileModalPr
             </div>
           </div>
 
-          <button type="submit" className="btn btn-primary w-100">
+          <button type="submit" className={`btn btn-primary ${styles['btn-primary']}`}>
             Save Profile
           </button>
         </form>
