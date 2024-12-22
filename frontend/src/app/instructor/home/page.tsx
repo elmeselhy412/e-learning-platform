@@ -105,6 +105,8 @@ export default function Home() {
   const goToCourseList = () => router.push('/instructor/courses');
 
   const handleOrganizeModules=()=>router.push('/instructor/organizeModules');
+
+  const handleAdaptiveQuizes=()=>router.push('/instructor/adaptiveQuiz');
   return (
     <div className="container mt-5">
       <h1 className="text-center mb-4">Welcome to the Instructor Portal</h1>
@@ -118,6 +120,9 @@ export default function Home() {
         </button>
         <button className="btn btn-primary me-2" style={{marginLeft:'6px'}} onClick={handleOrganizeModules}>
         Organize Modules
+        </button>
+        <button className="btn btn-success" style={{marginLeft:'6px'}} onClick={handleAdaptiveQuizes}>
+        Adaptive Quizes
         </button>
       </div>
 
