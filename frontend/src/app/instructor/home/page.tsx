@@ -15,7 +15,7 @@ export default function Home() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };
-
+  
   const goToCourseList = () => {
     router.push('/instructor/courses'); // Navigate to the course list page
   };
