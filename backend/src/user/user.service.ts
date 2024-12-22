@@ -13,6 +13,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthService } from 'src/auth/auth.service';
 import { UpdateProfileDto } from 'src/dto/update-profile.dto';
 import { FailedLogin } from '../models/failed-login.schema';
+import { UpdateProfileByInstructorDto } from 'src/dto/update-profile-by-instructor.dto';
 
 
 @Injectable()
@@ -185,7 +186,7 @@ export class UserService {
   
     async getUserById(userId: string) {
       try {
-        const user = await this.userModel.findById(userId).select('name');
+        const user = await this.userModel.findById(userId);
         return user; // Ensure it returns the user document
       } catch (error) {
         console.error(`Error fetching user by ID: ${userId}`, error);
@@ -295,7 +296,28 @@ export class UserService {
     );
     return updatedUser;
   }
+  async updateInstructorProfile(id: string, updateProfileDto: UpdateProfileByInstructorDto): Promise<UserDocument> {
+    const user = await this.userModel.findById(id);
 
+    if (!user) {
+        throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    // Merge new expertise and teaching interests with existing ones
+    if (updateProfileDto.expertise) {
+        user.expertise = Array.from(new Set([...(user.expertise || []), ...updateProfileDto.expertise]));
+    }
+    if (updateProfileDto.teachingInterests) {
+        user.teachingInterests = Array.from(new Set([...(user.teachingInterests || []), ...updateProfileDto.teachingInterests]));
+    }
+
+    await user.save();
+    return user;
+}
+
+  
+  
+  
     // Save the user to the database
   async deleteInstructor(id: string): Promise<{ message: string }> {
     const result = await this.userModel.deleteOne({ _id: id, role: 'instructor' });

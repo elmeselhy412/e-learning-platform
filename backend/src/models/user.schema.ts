@@ -35,6 +35,11 @@ export class User extends Document {
 
   @Prop({ type: [String], default: [], required: false })
   subjectsOfInterest: string[]; // Array of strings to store subjects of interest
+  @Prop({ type: [String], default: [] })
+  expertise: string[];
+
+  @Prop({ type: [String], default: [] })
+  teachingInterests: string[];
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

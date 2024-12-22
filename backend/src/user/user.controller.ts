@@ -1,5 +1,5 @@
 // src/user/user.controller.ts
-import { Body, Controller, Post, Get, HttpException, HttpStatus, UseGuards, Query, Put, Patch, Param, Delete } from '@nestjs/common';
+import { Body, Controller, Post, Get, HttpException, HttpStatus, UseGuards, Query, Put, Patch, Param, Delete, NotFoundException } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto, UserRole } from '../dto/create-user.dto'; // Import DTO for user registration
 import { EnrollCourseDto } from '../dto/enroll-course.dto'; // Import DTO for course enrollment
@@ -10,6 +10,7 @@ import { UpdateProfileDto } from 'src/dto/update-profile.dto';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { FailedLoginService } from './failed.login.service';
+import{UpdateProfileByInstructorDto} from 'src/dto/update-profile-by-instructor.dto'
 
 @Controller('users') // Base path for user-related routes
 export class UserController {
@@ -97,13 +98,26 @@ export class UserController {
       );
     }
   }
-  @Patch(':id')
-  async updateUserProfile(
-    @Param('id') id: string,
-    @Body() updateProfileDto: UpdateProfileDto,
-  ) {
-    return this.userService.updateUserProfile(id, updateProfileDto);
-  }
+ @Patch(':id')
+async updateUserProfile(
+  @Param('id') id: string,
+  @Body() updateProfileDto: UpdateProfileDto,
+) {
+  return this.userService.updateUserProfile(id, updateProfileDto);
+}
+
+@Patch('updateInstructor/:id')
+async updateInstructorProfile(
+  @Param('id') id: string,
+  @Body() updateProfileByInstructorDto: UpdateProfileByInstructorDto,
+) {
+  const updatedUser = await this.userService.updateInstructorProfile(id, updateProfileByInstructorDto);
+  return updatedUser; // Return the updated user object
+}
+
+
+
+
   @Get('students')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
@@ -202,6 +216,18 @@ export class UserController {
   async getFailedLogins() {
     return this.failedLoginService.getFailedLogins();
   }
+  @Get('instructor/:id')
+  async getInstructorProfile(@Param('id') id: string) {
+    const user = await this.userService.getUserById(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
   
-
+    return {
+      expertise: user.expertise || [],
+      teachingInterests: user.teachingInterests || [],
+    };
+  }
+  
+  
 }
