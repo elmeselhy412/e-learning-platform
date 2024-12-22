@@ -7,8 +7,8 @@ import axios from 'axios';
 
 export default function DashboardPage() {
   const [resources, setResources] = useState<{ type: string; url: string; title: string }[]>([]);
-  const [courseId] = useState('course-id-placeholder'); // Replace with actual course ID logic
-  const [userId] = useState('user-id-placeholder'); // Replace with logged-in user ID
+  const [courseId] = useState('6751adfbdca25805e6573771'); // Replace with actual course ID logic
+  const [userId] = useState('67509ba6a4b5d2df9ce183bd'); // Replace with logged-in user ID
   const [completionRate, setCompletionRate] = useState<number>(0);
   const [averageScore, setAverageScore] = useState<number>(0);
 
