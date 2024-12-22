@@ -25,9 +25,9 @@ export default function Register() {
     e.preventDefault();
     try {
       await axios.post('http://localhost:4000/users/register', formData);
-      setMessage('Registration successful! Redirecting to homepage...');
+      setMessage('Registration successful! Redirecting to Login...');
       setTimeout(() => {
-        router.push('/homepage'); // Ensure /homepage route exists
+        router.push('/login'); // Ensure /homepage route exists
       }, 2000);
     } catch (error) {
       if (axios.isAxiosError(error)) {

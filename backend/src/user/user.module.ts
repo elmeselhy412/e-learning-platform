@@ -9,25 +9,25 @@ import { JwtStrategy } from 'src/auth/JwtStrategy';
 import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from 'src/auth/auth.module';
 import { FailedLogin, FailedLoginSchema } from '../models/failed-login.schema';
-import { FailedLoginModule } from './failed.login.module'; // Import FailedLoginModule
+import { FailedLoginModule } from './failed.login.module';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema },
-      { name: FailedLogin.name, schema: FailedLoginSchema }, // Register FailedLogin schema
-
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: FailedLogin.name, schema: FailedLoginSchema },
     ]),
     FailedLoginModule,
-    CourseModule, // Import CourseModule to resolve CourseModel dependency
-    ConfigModule,
+    forwardRef(() => CourseModule),
+        ConfigModule,
     JwtModule.register({
       secret: 'JWT_SECRET', // Replace with your secret
       signOptions: { expiresIn: '3h' },
     }),
-    forwardRef(() => AuthModule),
+    forwardRef(() => AuthModule), // Use forwardRef for AuthModule as well
   ],
   controllers: [UserController],
   providers: [UserService, JwtStrategy],
-  exports: [UserService],
+  exports: [UserService, MongooseModule], // Ensure MongooseModule is exported if required
 })
 export class UserModule {}

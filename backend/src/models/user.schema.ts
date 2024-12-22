@@ -24,10 +24,9 @@ export class User extends Document {
   createdAt: Date;
 
   // Correctly using Schema.Types.ObjectId
-  @Prop({ type: [{ type: Types.ObjectId, ref: 'Course' }], default: [] })
-  courses: Types.ObjectId[]; // Stored as ObjectId in the database
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Course' }] }) // Reference to Course model
+  courses: Types.ObjectId[];
 
-  
   @Prop({ type: String, default: null }) // Field to store OTP
   otp?: string;
 

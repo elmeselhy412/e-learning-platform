@@ -5,27 +5,24 @@ import mongoose, { HydratedDocument } from 'mongoose';
 export type UserDocument = HydratedDocument<Progress>;
 
 @Schema()
-export class Progress {
-  @Prop({ required: true, unique: true })
-  progressId: string;
-
-  @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, ref: 'User' })
+export class Progress extends Document {
+  @Prop({ required: true })
   userId: string;
 
-  @Prop({ required: true, type: mongoose.Schema.Types.ObjectId, ref: 'Course' })
-  courseId: string; 
-
   @Prop({ required: true })
-  completionPercentage: number; 
+  courseId: string;
+
+  @Prop({ type: [String], default: [] }) // Completed module IDs
+  completedModules: string[];
+
+  @Prop({ type: [Number], default: [] }) // Quiz scores
+  scores: number[];
+
+  @Prop({ default: 0 }) // Completion percentage
+  completionPercentage: number;
 
   @Prop({ default: Date.now })
   lastAccessed: Date;
-
-  @Prop({ type: [String], default: [] })
-  completedModules: string[]; // Stores completed module IDs
-
-  @Prop({ type: [Number], default: [] })
-  scores: number[]; // Stores quiz or assessment scores
 }
 
 export const ProgressSchema = SchemaFactory.createForClass(Progress);

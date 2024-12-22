@@ -1,17 +1,21 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import mongoose, { Model } from 'mongoose';
 import { Note, NoteDocument } from '../models/Notes.schema'; // Adjust path if necessary
 import { CreateCourseDto } from 'src/dto/create-course.dto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Course, CourseDocument } from 'src/models/course.schema';
+import { EnrollCourseDto } from 'src/dto/enroll-course.dto';
+import { User, UserDocument } from 'src/models/user.schema';
 
 @Injectable()
 export class CoursesService {
+  
   constructor(
     @InjectModel(Note.name) private noteModel: Model<NoteDocument>,
     @InjectModel(Course.name) private courseModel:Model<CourseDocument>,
+    @InjectModel(User.name) private userModel:Model<UserDocument>
   ) {}
 
  
@@ -212,4 +216,58 @@ export class CoursesService {
     // Save and return the updated course document
     return course.save();
   }
+  async searchCourses(filters: { topic?: string; instructor?: string }) {
+    const query: any = {};
+    if (filters.topic) query.category = { $regex: filters.topic, $options: 'i' }; // Match category by topic
+    if (filters.instructor) query.createdBy = filters.instructor; // Match instructor by ID
+    return this.courseModel.find(query).exec();
+  }
+  
+  
+  async getUserEnrolledCourses(userId: string) {
+    // Step 1: Find the user
+    const user = await this.userModel.findById(userId).exec();
+  
+    if (!user) {
+      throw new Error('User not found');
+    }
+  
+    // Step 2: Fetch course details based on the ObjectId array in `user.courses`
+    const courses = await this.courseModel
+      .find({ _id: { $in: user.courses } }) // Use $in to fetch all matching courses
+      .exec();
+  
+    return courses; // Return full course details
+  }
+  async enrollStudentInCourse(userId: string, courseId: string) {
+    // Step 1: Find the user
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new Error('User not found');
+    }
+  
+    // Step 2: Find the course
+    const course = await this.courseModel.findById(courseId).exec();
+    if (!course) {
+      throw new Error('Course not found');
+    }
+  
+    // Step 3: Check if the user is already enrolled
+    if (user.courses.some((course) => course.toString() === courseId.toString())) {
+      throw new Error('Student already enrolled in this course');
+    }
+  
+    // Step 4: Enroll the student
+    user.courses.push(new mongoose.Types.ObjectId(courseId));
+    await user.save();
+  
+    return {
+      message: 'Enrollment successful!',
+      course,
+    };
+  }
+  
+  
+    
+  
 }

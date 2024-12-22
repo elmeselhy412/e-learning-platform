@@ -163,12 +163,35 @@ export class UserService {
     if (!isVerified) {
       throw new UnauthorizedException('Invalid OTP');
     }
-
+  
     const user = await this.findOneByEmail(email);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+  
+    console.log('Retrieved User:', user); // Debug to verify user object
+  
     const token = this.authService.generateToken(user);
-
-    return { message: 'Login successful', token };
+  
+    return {
+      success: true,
+      userId: user._id.toString(), // Convert ObjectId to string
+      email: user.email,
+      role: user.role,
+    };
   }
+  
+  
+    async getUserById(userId: string) {
+      try {
+        const user = await this.userModel.findById(userId).select('name');
+        return user; // Ensure it returns the user document
+      } catch (error) {
+        console.error(`Error fetching user by ID: ${userId}`, error);
+        return null; // Return null if the user isn't found or there's an error
+      }
+    }
+    
 
   // Enroll in a course
   async enrollCourse(enrollCourseDto: EnrollCourseDto): Promise<UserDocument> {

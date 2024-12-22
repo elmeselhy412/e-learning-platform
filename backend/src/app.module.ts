@@ -14,6 +14,10 @@ import { BackupModule } from './backup/backup.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { QuestionModule } from './question/question.module';
 import { QuizModule } from './quiz/quiz.module';
+import { ChatModule } from './chat/chat.module';
+import { ChatGateway } from './chat/chat.gateway';
+import { MessageService } from './messages/message.service';
+import { ForumModule } from './forum/forum.module';
 
 @Module({
   imports: [
@@ -40,8 +44,10 @@ import { QuizModule } from './quiz/quiz.module';
     PythonIntegrationModule,
     FeedbackModule,
     QuestionModule,
-    QuizModule
-    
+    QuizModule,
+    ChatModule,
+    ChatGateway,    
+    ForumModule
   ],
 })
 export class AppModule {}
