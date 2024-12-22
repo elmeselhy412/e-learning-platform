@@ -7,10 +7,14 @@ import { UserRole } from '../dto/create-user.dto'; // Import UserRole
 import { JwtAuthGuard } from 'src/auth/JwtAuthGuard';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage, Multer } from 'multer'; // Ensure this import is added at the top
+import { UserService } from 'src/user/user.service';
 
 @Controller('courses')
 export class CoursesController {
-  constructor(private readonly coursesService: CoursesService) {}
+  constructor(private readonly coursesService: CoursesService,
+        private readonly userService: UserService
+    
+  ) {}
 
 
   @Post('create')
@@ -22,15 +26,15 @@ export class CoursesController {
     return this.coursesService.createCourse(createCourseDto);
   }
 
-  @Get()
+  @Get('/')
   async getAllCourses() {
     return this.coursesService.getAllCourses();
   }
 
-  @Get(':id')
-  async getCourseById(@Param('id') id: string) {
-    return this.coursesService.getCourseById(id);
-  }
+  // @Get(':id')
+  // async getCourseById(@Param('id') id: string) {
+  //   return this.coursesService.getCourseById(id);
+  // }
 
   // Get the dashboard of a specific course
   @Get(':id/dashboard')
@@ -75,20 +79,22 @@ export class CoursesController {
   }
 
   // Update a course by ID (protected by role guard)
-  @Put(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.INSTRUCTOR) // Only Admins and Instructors can update courses
-  async updateCourse(@Param('id') id: string, @Body() createCourseDto: CreateCourseDto) {
-    return this.coursesService.updateCourse(id, createCourseDto);
-  }
+  // @Put(':id')
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles(UserRole.ADMIN, UserRole.INSTRUCTOR) // Only Admins and Instructors can update courses
+  // async updateCourse(@Param('id') id: string, @Body() createCourseDto: CreateCourseDto) {
+  //   return this.coursesService.updateCourse(id, createCourseDto);
+  // }
 
 
-  @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN) // Only Admins can delete courses
-  async deleteCourse(@Param('id') id: string) {
-    return this.coursesService.deleteCourse(id);
-  }
+  // @Delete(':id')
+  // @UseGuards(JwtAuthGuard, RolesGuard)
+  // @Roles(UserRole.ADMIN) // Only Admins can delete courses
+  // async deleteCourse(@Param('id') id: string) {
+  //   return this.coursesService.deleteCourse(id);
+  // }
+
+
   @Post('adjust-optimize')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.INSTRUCTOR) // Restricted to Admins and Instructors
@@ -147,13 +153,16 @@ async uploadMedia(
   
 @Get('enrolled-courses/:userId')
 async getEnrolledCourses(@Param('userId') userId: string) {
-  try {
-    const courses = await this.coursesService.getUserEnrolledCourses(userId);
-    return { courses };
-  } catch (error) {
-    throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+  const user = await this.userService.getUserById(userId);
+  if (!user) {
+    throw new NotFoundException('User not found');
   }
+
+  // Ensure enrolled course IDs are returned as strings
+  const enrolledCourses = user.courses.map((courseId: any) => courseId.toString());
+  return { courses: enrolledCourses };
 }
+
 
 @Post('enroll')
 async enrollStudent(@Body() { userId, courseId }: { userId: string; courseId: string }) {
