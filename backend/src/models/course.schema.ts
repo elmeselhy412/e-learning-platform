@@ -29,6 +29,25 @@ export class Course extends Document {
   
   @Prop({ required: false })
   archived: boolean;
+
+  @Prop({
+    type: [
+      {
+        content: { type: String, required: true },
+        updatedBy: { type: String, required: true }, // Username or ID of the user
+        updatedAt: { type: Date, default: Date.now }, // Timestamp of update
+      },
+    ],
+    default: [],
+  })
+  revisions: {
+    content: string;
+    updatedBy: string;
+    updatedAt: Date;
+  }[];
+
+  @Prop({ default: '' })
+  content: string; // Current course content
 }
 
 export const CourseSchema = SchemaFactory.createForClass(Course);

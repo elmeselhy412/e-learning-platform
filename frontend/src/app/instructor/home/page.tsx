@@ -11,12 +11,13 @@ export default function Home() {
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [showUploadModal, setShowUploadModal] = useState(false);
-
+const userId = localStorage.getItem('userId')
   const [courseData, setCourseData] = useState({
     title: '',
     description: '',
     category: '',
     difficultyLevel: '',
+    createdBy: userId,
   });
 
   const router = useRouter();
@@ -43,7 +44,7 @@ export default function Home() {
   const handleCreateCourseModalOpen = () => setIsCreateCourseModalOpen(true);
   const handleCreateCourseModalClose = () => {
     setIsCreateCourseModalOpen(false);
-    setCourseData({ title: '', description: '', category: '', difficultyLevel: '' });
+    setCourseData({ title: '', description: '', category: '', difficultyLevel: '', createdBy: userId });
   };
 
   const handleCourseFieldChange = (

@@ -34,6 +34,10 @@ export default function CourseListPage() {
   const navigateToAnalytics = (courseId: string) => {
     router.push(`/instructor/analytics/${courseId}`);
 };
+const navigateToDetails = (courseId: string) => {
+  router.push(`/instructor/courses/${courseId}`);
+};
+
 
   return (
     <div className="container mt-5">
@@ -59,6 +63,12 @@ export default function CourseListPage() {
                   >
                     View Analytics
                   </button>
+                  <button
+                      className="btn btn-secondary"
+                      onClick={() => navigateToDetails(course._id)}
+                    >
+                      View Details
+                    </button>
                 </div>
               </div>
             </div>

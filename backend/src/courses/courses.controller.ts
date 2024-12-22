@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Delete, UseGuards, UseInterceptors, UploadedFiles, Req, NotFoundException, Query, HttpException, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Delete, UseGuards, UseInterceptors, UploadedFiles, Req, NotFoundException, Query, HttpException, HttpStatus, Patch } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from '../dto/create-course.dto'; // Import DTO
 import { Roles } from '../auth/roles.decorator'; // Import Roles Decorator
@@ -8,6 +8,8 @@ import { JwtAuthGuard } from 'src/auth/JwtAuthGuard';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { diskStorage, Multer } from 'multer'; // Ensure this import is added at the top
 import { UserService } from 'src/user/user.service';
+import { UpdateCourseDto } from 'src/dto/update-course.dto';
+import { Course } from 'src/models/course.schema';
 
 @Controller('courses')
 export class CoursesController {
@@ -74,13 +76,15 @@ export class CoursesController {
     return this.coursesService.deleteNote(noteId);
   }
 
-  // Update a course by ID (protected by role guard)
-  // @Put(':id')
-  // @UseGuards(JwtAuthGuard, RolesGuard)
-  // @Roles(UserRole.ADMIN, UserRole.INSTRUCTOR) // Only Admins and Instructors can update courses
-  // async updateCourse(@Param('id') id: string, @Body() createCourseDto: CreateCourseDto) {
-  //   return this.coursesService.updateCourse(id, createCourseDto);
-  // }
+  @Get(':id')
+  async getCourseById(@Param('id') id: string): Promise<Course> {
+    const course = await this.coursesService.findById(id);
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+    return course;
+  }
+  
 
 
   // @Delete(':id')
@@ -134,12 +138,6 @@ export class CoursesController {
     // Call service to add media to the course
     return this.coursesService.addMediaToCourse(courseId, mediaPaths);
   }
-
- 
-
-
-
-
   @Get('search-courses')
   async searchCourses(@Query('topic') topic?: string, @Query('instructor') instructor?: string) {
     try {
@@ -178,5 +176,29 @@ async enrollStudent(@Body() { userId, courseId }: { userId: string; courseId: st
     throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
   }
 }
+
+
+  // Endpoint to update course content
+@Patch(':id/update')
+async updateCourse(
+  @Param('id') id: string,
+  @Body() updateCourseDto: UpdateCourseDto,
+) {
+  return this.coursesService.updateCourse(id, updateCourseDto);
+}
+
+
+  // Endpoint to get course revision history
+  @Get(':id/revisions')
+  async getCourseRevisions(@Param('id') courseId: string) {
+    return this.coursesService.getRevisions(courseId);
+  }
+  @Post(':id/rollback/:versionIndex')
+  async rollbackToVersion(
+    @Param('id') courseId: string,
+    @Param('versionIndex') versionIndex: number,
+  ) {
+    return this.coursesService.rollbackToVersion(courseId, versionIndex);
+  }
 
 }
