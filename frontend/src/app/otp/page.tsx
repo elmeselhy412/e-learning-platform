@@ -40,8 +40,8 @@ export default function VerifyOTP() {
         setRole(role);
         localStorage.setItem('userId', userId);
         setUserId(userId); // Save userId in context
-        // console.log(userId);
-        // console.log(role);
+        console.log(userId);
+        console.log(role);
       setMessage('OTP verified successfully! Redirecting to homepage...');
       if (role === 'admin') {
         router.push('/admin/home');
