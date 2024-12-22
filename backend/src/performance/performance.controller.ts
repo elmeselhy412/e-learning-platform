@@ -4,6 +4,20 @@ import { PerformanceService } from './performance.service';
 @Controller('performance')
 export class PerformanceController {
   constructor(private readonly performanceService: PerformanceService) {}
+  @Post('/create')
+  async createProgress(
+    @Body()
+    createDto: {
+      userId: string; // Pass userId
+      courseId: string; // Pass courseId
+      completedModules?: string[];
+      scores?: number[];
+      completionPercentage?: number;
+    },
+  ) {
+    const { userId, courseId, ...rest } = createDto;
+    return await this.performanceService.createProgress(userId, courseId, rest);
+  }
 
   @Post('/update')
   async updateProgress(@Body() updateDto: { userId: string; courseId: string; completionPercentage: number }) {
@@ -56,4 +70,11 @@ export class PerformanceController {
   async getCourseProgress(@Param('courseId') courseId: string) {
     return this.performanceService.getCourseProgress(courseId);
   }
+
+  @Get('/course/:courseId/analysis')
+async getCourseAnalysis(@Param('courseId') courseId: string) {
+  return this.performanceService.getCourseAnalysis(courseId);
+}
+
+  
 }

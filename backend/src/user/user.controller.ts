@@ -120,7 +120,6 @@ async updateInstructorProfile(
 
   @Get('students')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
   async getAllStudent() {
     try {
       const students = await this.userService.getAllStudents();
