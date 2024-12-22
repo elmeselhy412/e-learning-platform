@@ -16,9 +16,7 @@ export default function CompleteProfileModal({ onClose }: CompleteProfileModalPr
   useEffect(() => {
     const fetchUserProfile = async () => {
       try {
-        const response = await axios.get(
-          `http://localhost:4000/users/instructor/${userId}`
-        );
+        const response = await axios.get(`http://localhost:4000/users/instructor/${userId}`);
         const { expertise, teachingInterests } = response.data;
         setExpertise(expertise || []);
         setTeachingInterests(teachingInterests || []);
@@ -89,7 +87,7 @@ export default function CompleteProfileModal({ onClose }: CompleteProfileModalPr
         {message && <div className={styles.alert}>{message}</div>}
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
-            <label htmlFor="expertise" className="form-label">
+            <label htmlFor="expertise" className={styles['form-label']}>
               Expertise
             </label>
             <input
@@ -109,7 +107,7 @@ export default function CompleteProfileModal({ onClose }: CompleteProfileModalPr
               {expertise.map((item, index) => (
                 <span
                   key={index}
-                  className={`badge bg-primary ${styles.badge}`}
+                  className={`${styles.badge}`}
                   onClick={() => handleRemoveExpertise(index)}
                 >
                   {item} ✕
@@ -119,7 +117,7 @@ export default function CompleteProfileModal({ onClose }: CompleteProfileModalPr
           </div>
 
           <div className="mb-4">
-            <label htmlFor="teachingInterests" className="form-label">
+            <label htmlFor="teachingInterests" className={styles['form-label']}>
               Teaching Interests
             </label>
             <input
@@ -139,7 +137,7 @@ export default function CompleteProfileModal({ onClose }: CompleteProfileModalPr
               {teachingInterests.map((item, index) => (
                 <span
                   key={index}
-                  className={`badge bg-success ${styles.badge}`}
+                  className={`${styles.badge}`}
                   onClick={() => handleRemoveTeachingInterest(index)}
                 >
                   {item} ✕

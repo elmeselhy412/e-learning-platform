@@ -1,0 +1,72 @@
+/* Home container styling */
+.homeContainer {
+    margin-top: 50px;
+    text-align: center;
+  }
+  
+  /* Chat popup overlay */
+  .chatOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  /* Chat popup container */
+  .chatPopup {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: relative;
+  }
+  
+  /* Close button for chat */
+  .closeButton {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #333;
+  }
+  
+  /* Scoped button styles */
+  .actionButton {
+    margin: 10px;
+    padding: 12px 20px;
+    border-radius: 5px;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .actionButton.btn-primary {
+    background-color: #007bff;
+    color: white;
+  }
+  
+  .actionButton.btn-primary:hover {
+    background-color: #0056b3;
+  }
+  
+  .actionButton.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+  }
+  
+  .actionButton.btn-secondary:hover {
+    background-color: #5a6268;
+  }
+  

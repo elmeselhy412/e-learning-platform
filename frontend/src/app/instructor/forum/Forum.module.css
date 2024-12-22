@@ -1,0 +1,79 @@
+/* Modal Overlay */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  
+  /* Modal Container */
+  .modalContainer {
+    background-color: #111;
+    color: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  }
+  
+  /* Modal Header */
+  .modalHeader {
+    margin-bottom: 15px;
+    font-size: 24px;
+    text-align: center;
+    color: #1e90ff;
+  }
+  
+  /* Modal Input */
+  .modalInput {
+    width: 100%;
+    padding: 10px;
+    border-radius: 4px;
+    border: 1px solid #333;
+    background: #222;
+    color: white;
+    margin-bottom: 15px;
+  }
+  
+  /* Modal Actions */
+  .modalActions {
+    display: flex;
+    justify-content: space-between;
+  }
+  
+  /* Button Styles */
+  .actionButton {
+    padding: 10px 20px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .btnPrimary {
+    background-color: #1e90ff;
+    color: white;
+  }
+  
+  .btnPrimary:hover {
+    background-color: #0056b3;
+  }
+  
+  .btnSecondary {
+    background-color: #6c757d;
+    color: white;
+  }
+  
+  .btnSecondary:hover {
+    background-color: #5a6268;
+  }
+
+  
