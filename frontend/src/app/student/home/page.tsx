@@ -34,13 +34,22 @@ useEffect(() => {
 const fetchCourses = async () => {
   try {
     const response = await axios.get('http://localhost:4000/courses');
-    setCourses(response.data.map((course: any) => ({ ...course, _id: course._id.toString() })));
+    console.log('Courses Response:', response.data); // Log the data to inspect structure
+
+    // Ensure _id exists and convert it to a string
+    const formattedCourses = response.data.map((course: any) => ({
+      ...course,
+      _id: course._id ? course._id.toString() : '', // Safeguard _id conversion
+    }));
+
+    setCourses(formattedCourses);
     setMessage('');
   } catch (error) {
     console.error('Error fetching courses:', error);
     setMessage('Failed to load courses. Please try again later.');
   }
 };
+
 
 const fetchEnrolledCourses = async () => {
   try {

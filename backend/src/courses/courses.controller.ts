@@ -105,42 +105,37 @@ export class CoursesController {
   ) {
     return this.coursesService.adjustAndOptimizeCourses(folderPath, feedbackData, performanceData);
   }
-  
-@Post(':courseId/upload-media')
+  @Post(':courseId/upload-media')
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.INSTRUCTOR)
-@UseInterceptors( FilesInterceptor('files', 10, {
-  storage: diskStorage({
-    destination: './uploads/courses',
-    filename: (req, file, callback) => {
-      // Extract the original extension
-      const extension = file.originalname.split('.').pop(); // Get the file extension
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-      const filename = `${uniqueSuffix}.${extension}`;
-      callback(null, filename);
-    },
+@UseInterceptors(
+  FilesInterceptor('files', 10, {
+    storage: diskStorage({
+      destination: './uploads/courses',
+      filename: (req, file, callback) => {
+        const extension = file.originalname.split('.').pop();
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+        const filename = `${uniqueSuffix}.${extension}`;
+        callback(null, filename);
+      },
+    }),
   }),
-}),)
+)
 async uploadMedia(
   @Param('courseId') courseId: string,
   @UploadedFiles() files: Array<Express.Multer.File>,
   @Req() req: any,
 ) {
-  console.log('req.user:', req.user); // Debugging log
-
   if (!files || files.length === 0) {
-    throw new NotFoundException('No files uploaded');
+    throw new NotFoundException('No files uploaded.');
   }
-  
-    // Get the logged-in instructor ID from the request
-    const loggedInInstructorId = req.user.userId;
-  
-    // Map file paths to store in the database
-    const mediaPaths = files.map((file) => `/uploads/courses/${file.filename}`);
-  
-    // Call the service to append media to the course
-    return this.coursesService.addMediaToCourse(courseId, loggedInInstructorId, mediaPaths);
-  }
+
+  const loggedInInstructorId = req.user.userId;
+
+  // Validate course existence and instructor ownership
+  const mediaPaths = files.map((file) => `/uploads/courses/${file.filename}`);
+  return this.coursesService.addMediaToCourse(courseId, loggedInInstructorId, mediaPaths);
+}
   @Get('search-courses')
   async searchCourses(@Query('topic') topic?: string, @Query('instructor') instructor?: string) {
     try {
@@ -150,19 +145,25 @@ async uploadMedia(
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
+  @Get('enrolled-courses/:userId')
+  async getEnrolledCourses(@Param('userId') userId: string) {
+    // Fetch the user by ID
+    const user = await this.userService.getUserById(userId);
   
-@Get('enrolled-courses/:userId')
-async getEnrolledCourses(@Param('userId') userId: string) {
-  const user = await this.userService.getUserById(userId);
-  if (!user) {
-    throw new NotFoundException('User not found');
+    // If user not found, throw a NotFoundException
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+  
+    // Safeguard against undefined or invalid courses
+    const enrolledCourses = Array.isArray(user.courses)
+      ? user.courses.map((courseId: any) => courseId.toString())
+      : [];
+  
+    // Return the enrolled courses as an array of strings
+    return { courses: enrolledCourses };
   }
-
-  // Ensure enrolled course IDs are returned as strings
-  const enrolledCourses = user.courses.map((courseId: any) => courseId.toString());
-  return { courses: enrolledCourses };
-}
-
+  
 
 @Post('enroll')
 async enrollStudent(@Body() { userId, courseId }: { userId: string; courseId: string }) {

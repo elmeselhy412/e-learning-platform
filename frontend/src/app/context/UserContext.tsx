@@ -8,6 +8,8 @@ interface UserContextType {
   setRole: (role: string) => void;
   userId: string;
   setUserId: (userId: string) => void;
+  token:string;
+  setToken:(token:string)=> void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -16,6 +18,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('');
   const [userId, setUserId] = useState('');
+  const[token, setToken] = useState('');
   const [isClient, setIsClient] = useState(false);
 
   // Ensure rendering only happens on the client
@@ -39,7 +42,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <UserContext.Provider value={{ email, setEmail, role, setRole, userId, setUserId }}>
+    <UserContext.Provider value={{ email, setEmail, role, setRole, userId, setUserId, token, setToken }}>
       {children}
     </UserContext.Provider>
   );
