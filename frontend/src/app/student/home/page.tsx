@@ -19,15 +19,14 @@ export default function StudentHome() {
   const [enrolledCourses, setEnrolledCourses] = useState<string[]>([]);
   const router = useRouter();
   const userId = localStorage.getItem('userId');
-  console.log(userId);
 
+  // Fetch all courses and enrolled courses
   useEffect(() => {
     fetchCourses();
-    if (userId) {
-      fetchEnrolledCourses();
-    }
+    if (userId) fetchEnrolledCourses();
   }, [userId]);
 
+  // Fetch all courses
   const fetchCourses = async () => {
     try {
       const response = await axios.get('http://localhost:4000/courses');
@@ -39,11 +38,11 @@ export default function StudentHome() {
     }
   };
 
+  // Fetch enrolled courses
   const fetchEnrolledCourses = async () => {
     try {
       const response = await axios.get(`http://localhost:4000/courses/enrolled-courses/${userId}`);
-      console.log('Enrolled Courses:', response.data.courses);
-      setEnrolledCourses(response.data.courses);
+      setEnrolledCourses(response.data.courses || []);
     } catch (error) {
       console.error('Error fetching enrolled courses:', error);
       setEnrolledCourses([]);
@@ -51,9 +50,10 @@ export default function StudentHome() {
     }
   };
 
+  // Enroll in a course
   const handleEnroll = async (courseId: string) => {
     if (!userId) {
-      setMessage('User not logged in.');
+      setMessage('You must be logged in to enroll in courses.');
       return;
     }
     try {
@@ -62,95 +62,54 @@ export default function StudentHome() {
       fetchEnrolledCourses();
     } catch (error) {
       console.error('Error enrolling in course:', error);
-      setMessage('User Already Enrolled.');
+      setMessage('You are already enrolled in this course.');
     }
-  }
+  };
 
+  // Handle search inputs
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setSearchParams((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Handle search submission
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     fetchCourses();
   };
 
-  const handleDashboardRedirect = () => {
-    router.push('/course/dashboard');
-  };
-
-  const handleQuizRedirect = () => {
-    router.push('/quiz');
-  };
+  // Navigation buttons
+  const handleDashboardRedirect = () => router.push('/course/dashboard');
+  const handleQuizRedirect = () => router.push('/quiz');
+  const handleForumRedirect = () => router.push('/student/forum');
+  const handleProfileRedirect = () => router.push('/student/complete-profile');
+  const handleAnnouncementsRedirect = () => router.push('/student/announcements'); // Add this for announcements
 
   return (
     <div className="container mt-5">
-      <div className="d-flex justify-content-between align-items-center">
-        <div>
-          <h1 className="text-center mb-4">Browse and Enroll in Courses</h1>
-        </div>
-        <div>
-          <button
-            onClick={() => {
-              window.location.replace('/student/forum');
-            }}
-            style={{
-              width: '200px',
-              padding: '10px',
-            }}
-            className="btn btn-primary w-100"
-          >
-            Forum
-          </button>
-        </div>
+      {/* Header */}
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h1>Browse and Enroll in Courses</h1>
+        <button className="btn btn-primary" onClick={handleForumRedirect}>
+          Forum
+        </button>
       </div>
 
-      {/* New Complete Profile Button */}
-      <div>
-        <button
-          onClick={() => router.push('/instructor/complete-profile')}
-          style={{
-            marginTop: '20px',
-            padding: '10px 20px',
-            backgroundColor: '#6c63ff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            marginRight: '10px',
-          }}
-        >
+      {/* Action Buttons */}
+      <div className="mb-4">
+        <button className="btn btn-secondary me-2" onClick={handleProfileRedirect}>
           Complete Profile
         </button>
-        <button
-          onClick={handleDashboardRedirect}
-          style={{
-            marginTop: '20px',
-            padding: '10px 20px',
-            backgroundColor: '#007bff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            marginRight: '10px',
-          }}
-        >
+        <button className="btn btn-primary me-2" onClick={handleDashboardRedirect}>
           Go to Dashboard
         </button>
-        <button
-          onClick={handleQuizRedirect}
-          style={{
-            marginTop: '20px',
-            padding: '10px 20px',
-            backgroundColor: '#28a745',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
-        >
+        <button className="btn btn-success me-2" onClick={handleQuizRedirect}>
           Start Quiz
+        </button>
+        <button
+         className="btn btn-info"
+         onClick={() => router.push('/student/announcements')}>
+         View Announcements
         </button>
       </div>
 
@@ -185,8 +144,10 @@ export default function StudentHome() {
         </div>
       </form>
 
+      {/* Message */}
       {message && <div className="alert alert-info text-center">{message}</div>}
 
+      {/* Courses */}
       <div className="row">
         {courses && courses.length > 0 ? (
           courses.map((course) => {
