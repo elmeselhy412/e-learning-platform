@@ -357,6 +357,3 @@ async archiveCourse(courseId: string, archived: boolean): Promise<Course> {
     
   
 }
-
-  
-}
