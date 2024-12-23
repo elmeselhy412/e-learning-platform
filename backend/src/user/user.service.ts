@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { isValidObjectId, Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
@@ -14,6 +14,8 @@ import { AuthService } from 'src/auth/auth.service';
 import { UpdateProfileDto } from 'src/dto/update-profile.dto';
 import { FailedLogin } from '../models/failed-login.schema';
 import { UpdateProfileByInstructorDto } from 'src/dto/update-profile-by-instructor.dto';
+import { UpdateStatusDto } from 'src/dto/update-status.dto';
+import { LoginActivityLog } from 'src/models/LoginActivityLog.schema';
 
 
 @Injectable()
@@ -36,10 +38,21 @@ export class UserService {
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     @InjectModel(Course.name) private courseModel: Model<CourseDocument>,
     @InjectModel(FailedLogin.name) private failedLoginModel: Model<FailedLogin>,
+    @InjectModel(LoginActivityLog.name) private readonly logModel: Model<LoginActivityLog>,
+
     private readonly authService: AuthService,
     private readonly jwtService: JwtService,
   ) {}
-
+  async logEvent(userId: string, eventType: string, reason?: string, ipAddress?: string) {
+    const log = new this.logModel({
+      userId,
+      eventType,
+      reason,
+      ipAddress,
+      timestamp: new Date(),
+    });
+    await log.save();
+  }
   // Fetch user by email
   async findOneByEmail(email: string): Promise<UserDocument | null> {
     return this.userModel.findOne({ email });
@@ -162,18 +175,22 @@ export class UserService {
   async verifyOtpAndLogin(email: string, otp: string): Promise<any> {
     const isVerified = await this.verifyOTP(email, otp);
     if (!isVerified) {
+      await this.logEvent(undefined, 'login-failed', 'Invalid OTP');
       throw new UnauthorizedException('Invalid OTP');
     }
   
     const user = await this.findOneByEmail(email);
     if (!user) {
+      await this.logEvent(undefined, 'login-failed', 'Invalid credentials');
       throw new NotFoundException('User not found');
     }
   
     console.log('Retrieved User:', user); // Debug to verify user object
   
     const token = this.authService.generateToken(user);
-  
+    await this.logEvent(user.id, 'mfa-verified', undefined); // Replace with actual IP
+    await this.logEvent(user.id, 'login-success', undefined); // Replace with actual IP
+
     return {
       success: true,
       userId: user._id.toString(), // Convert ObjectId to string
@@ -193,7 +210,10 @@ export class UserService {
         return null; // Return null if the user isn't found or there's an error
       }
     }
-    
+   
+    getAll(){
+      return this.userModel.find().exec();
+    }
 
   // Enroll in a course
   async enrollCourse(enrollCourseDto: EnrollCourseDto): Promise<UserDocument> {
@@ -314,14 +334,32 @@ export class UserService {
     await user.save();
     return user;
 }
-
-  
-  
   
     // Save the user to the database
   async deleteInstructor(id: string): Promise<{ message: string }> {
     const result = await this.userModel.deleteOne({ _id: id, role: 'instructor' });
     return { message: 'Student deleted successfully' };
   }
-
+  async updateUser(id: string, updateData: { status: 'active' | 'inactive' }): Promise<UserDocument> {
+    if (!id) {
+      throw new BadRequestException('Invalid ID');
+    }
+  
+    console.log('Updating User:', { id, status: updateData.status }); // Debug
+  
+    const updatedUser = await this.userModel.findByIdAndUpdate(
+      id,
+      { status: updateData.status }, // Update only the status field
+      { new: true }, // Ensure the updated document is returned
+    );
+  
+    if (!updatedUser) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+  
+    console.log('Updated User:', updatedUser); // Debug updated user
+    return updatedUser;
+  }
+  
+  
 }

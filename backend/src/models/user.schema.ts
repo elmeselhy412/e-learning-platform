@@ -40,6 +40,10 @@ export class User extends Document {
 
   @Prop({ type: [String], default: [] })
   teachingInterests: string[];
+
+ // Add status field with enum and default value
+ @Prop({ type: String, enum: ['active', 'inactive'], default: 'inactive' })
+ status: 'active' | 'inactive';
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

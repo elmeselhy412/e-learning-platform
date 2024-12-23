@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Delete, UseGuards, UseInterceptors, UploadedFiles, Req, NotFoundException, Query, HttpException, HttpStatus } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Delete, UseGuards, UseInterceptors, UploadedFiles, Req, NotFoundException, Query, HttpException, HttpStatus, Patch } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from '../dto/create-course.dto'; // Import DTO
 import { Roles } from '../auth/roles.decorator'; // Import Roles Decorator
@@ -173,5 +173,18 @@ async enrollStudent(@Body() { userId, courseId }: { userId: string; courseId: st
     throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
   }
 }
+@Patch(':id/archive')
+async archiveCourse(
+  @Param('id') id: string,
+  @Body('archived') archived: boolean,
+) {
+  return this.coursesService.archiveCourse(id, archived);
+}
 
+
+// Delete a course
+@Delete(':id')
+async deleteCourse(@Param('id') id: string) {
+  return this.coursesService.deleteCourse(id);
+}
 }

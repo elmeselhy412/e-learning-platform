@@ -1,5 +1,5 @@
 // src/user/user.controller.ts
-import { Body, Controller, Post, Get, HttpException, HttpStatus, UseGuards, Query, Put, Patch, Param, Delete, NotFoundException } from '@nestjs/common';
+import { Body, Controller, Post, Get, HttpException, HttpStatus, UseGuards, Query, Put, Patch, Param, Delete, NotFoundException, BadRequestException } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto, UserRole } from '../dto/create-user.dto'; // Import DTO for user registration
 import { EnrollCourseDto } from '../dto/enroll-course.dto'; // Import DTO for course enrollment
@@ -11,11 +11,13 @@ import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { FailedLoginService } from './failed.login.service';
 import{UpdateProfileByInstructorDto} from 'src/dto/update-profile-by-instructor.dto'
+import { UpdateStatusDto } from 'src/dto/update-status.dto';
 
 @Controller('users') // Base path for user-related routes
 export class UserController {
   constructor(private readonly userService: UserService,
     private readonly failedLoginService: FailedLoginService
+    
   ) {}
 
   // 1. Register a new user
@@ -227,6 +229,26 @@ async updateInstructorProfile(
       teachingInterests: user.teachingInterests || [],
     };
   }
+
+  @Get('/getAll')
+  async getAllusers(){
+    return await this.userService.getAll();
+  }
+  
+  @Patch('status/:id')
+  async updateUserStatus(
+    @Param('id') id: string,
+    @Body() updateData: { status: 'active' | 'inactive' },
+  ) {
+    console.log('Received ID:', id); // Debug the ID
+    console.log('Received Update Data:', updateData); // Debug the incoming body
+  
+    const updatedUser = await this.userService.updateUser(id, updateData);
+    console.log('Updated User:', updatedUser); // Debug the updated user
+  
+    return updatedUser;
+  }
   
   
+
 }

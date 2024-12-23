@@ -223,7 +223,28 @@ export class CoursesService {
     };
   }
   
-  
+  // Archive or Unarchive a course
+async archiveCourse(courseId: string, archived: boolean): Promise<Course> {
+  const course = await this.courseModel.findById(courseId).exec();
+  if (!course) {
+    throw new NotFoundException(`Course with ID ${courseId} not found.`);
+  }
+
+  course.archived = archived; // Set the archive status to true or false
+  return course.save(); // Save the updated course and return it
+}
+
+
+  // Delete a course
+  async deleteCourse(courseId: string): Promise<{ message: string }> {
+    const course = await this.courseModel.findById(courseId).exec();
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${courseId} not found.`);
+    }
+
+    await this.courseModel.findByIdAndDelete(courseId); // Delete the course
+    return { message: `Course with ID ${courseId} has been deleted.` };
+  }
     
   
 }

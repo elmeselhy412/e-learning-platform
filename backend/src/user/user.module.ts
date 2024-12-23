@@ -10,12 +10,15 @@ import { JwtModule } from '@nestjs/jwt';
 import { AuthModule } from 'src/auth/auth.module';
 import { FailedLogin, FailedLoginSchema } from '../models/failed-login.schema';
 import { FailedLoginModule } from './failed.login.module';
+import { LoginActivityLog, LoginActivityLogSchema } from 'src/models/LoginActivityLog.schema';
 
 @Module({
   imports: [
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: FailedLogin.name, schema: FailedLoginSchema },
+      { name: LoginActivityLog.name, schema: LoginActivityLogSchema }, 
+
     ]),
     FailedLoginModule,
     forwardRef(() => CourseModule),

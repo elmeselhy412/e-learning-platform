@@ -9,5 +9,6 @@ export class UpdateProfileDto {
     
     @IsString()
     subjectsOfInterest?: string[];
+    
   }
   

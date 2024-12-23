@@ -1,4 +1,4 @@
-import { Controller, Get, Patch, Delete, Param,UseGuards, Post } from '@nestjs/common';
+import { Controller, Get, Patch, Delete, Param,UseGuards, Post, Query } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { RolesGuard } from '../auth/roles.guard';
 import { JwtAuthGuard } from 'src/auth/JwtAuthGuard';
@@ -56,5 +56,15 @@ export class AdminController {
   //     return 'Failed to send announcement';
   //   }
   // }
+
+  @Get('auth-logs')
+  async getAuthLogs(
+    @Query('userId') userId?: string,
+    @Query('eventType') eventType?: string,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
+    return this.adminService.getAuthLogs({ userId, eventType, dateFrom, dateTo });
+  }
   
 }

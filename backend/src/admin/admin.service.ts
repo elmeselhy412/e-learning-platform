@@ -3,12 +3,14 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Course, CourseDocument } from '../models/course.schema';
 import { NotificationDocument } from 'src/models/Notification.schema';
+import { LoginActivityLog, LoginActivityLogDocument } from 'src/models/LoginActivityLog.schema';
 
 @Injectable()
 export class AdminService {
   private readonly logger = new Logger(AdminService.name) // Instantiate the logger with the class name
   constructor(
     @InjectModel(Course.name) private courseModel: Model<CourseDocument>,
+    @InjectModel(LoginActivityLog.name) private LoginActivityLog: Model<LoginActivityLogDocument>
   ) {}
 
   // Retrieve all courses
@@ -54,4 +56,22 @@ export class AdminService {
 //   logError(message: string, stack?: string): void {
 //     this.logger.error(message, stack);
 //   }
+
+async getAuthLogs(filters: {
+  userId?: string;
+  eventType?: string;
+  dateFrom?: string;
+  dateTo?: string;
+}) {
+  const query: any = {};
+  if (filters.userId) query.userId = filters.userId;
+  if (filters.eventType) query.eventType = filters.eventType;
+  if (filters.dateFrom || filters.dateTo) {
+    query.timestamp = {};
+    if (filters.dateFrom) query.timestamp.$gte = new Date(filters.dateFrom);
+    if (filters.dateTo) query.timestamp.$lte = new Date(filters.dateTo);
+  }
+
+  return this.LoginActivityLog.find(query).exec();
+}
 }
