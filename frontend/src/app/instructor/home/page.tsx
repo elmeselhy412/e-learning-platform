@@ -11,7 +11,7 @@ export default function Home() {
   const [selectedCourse, setSelectedCourse] = useState<string | null>(null);
   const [mediaFiles, setMediaFiles] = useState<File[]>([]);
   const [showUploadModal, setShowUploadModal] = useState(false);
-const userId = localStorage.getItem('userId')
+  const userId = localStorage.getItem('userId');
   const [courseData, setCourseData] = useState({
     title: '',
     description: '',
@@ -53,7 +53,6 @@ const userId = localStorage.getItem('userId')
     const { name, value } = e.target;
     setCourseData((prev) => ({ ...prev, [name]: value }));
   };
-  
 
   const handleCourseSubmit = async () => {
     try {
@@ -61,6 +60,7 @@ const userId = localStorage.getItem('userId')
       if (!response.data) throw new Error('Failed to create course');
       alert('Course created successfully!');
       handleCreateCourseModalClose();
+      router.refresh();
     } catch (error) {
       console.error('Error creating course:', error);
       alert('Failed to create course. Please try again.');
@@ -105,9 +105,10 @@ const userId = localStorage.getItem('userId')
 
   const goToCourseList = () => router.push('/instructor/courses');
 
-  const handleOrganizeModules=()=>router.push('/instructor/organizeModules');
+  const handleOrganizeModules = () => router.push('/instructor/organizeModules');
 
-  const handleAdaptiveQuizes=()=>router.push('/instructor/adaptiveQuiz');
+  const handleAdaptiveQuizzes = () => router.push('/instructor/adaptiveQuiz');
+
   return (
     <div className="container mt-5">
       <h1 className="text-center mb-4">Welcome to the Instructor Portal</h1>
@@ -119,11 +120,11 @@ const userId = localStorage.getItem('userId')
         <button className="btn btn-success" onClick={handleCreateCourseModalOpen}>
           Create Course
         </button>
-        <button className="btn btn-primary me-2" style={{marginLeft:'6px'}} onClick={handleOrganizeModules}>
-        Organize Modules
+        <button className="btn btn-primary me-2" style={{ marginLeft: '6px' }} onClick={handleOrganizeModules}>
+          Organize Modules
         </button>
-        <button className="btn btn-success" style={{marginLeft:'6px'}} onClick={handleAdaptiveQuizes}>
-        Adaptive Quizes
+        <button className="btn btn-success" style={{ marginLeft: '6px' }} onClick={handleAdaptiveQuizzes}>
+          Adaptive Quizzes
         </button>
       </div>
 
@@ -249,6 +250,12 @@ const userId = localStorage.getItem('userId')
                     >
                       Upload Multimedia
                     </button>
+                    <button
+                      className="btn btn-secondary ms-2"
+                      onClick={() => router.push(`/instructor/courses/${course._id}/optimize`)}
+                    >
+                      Adjust & Optimize
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -302,3 +309,4 @@ const userId = localStorage.getItem('userId')
     </div>
   );
 }
+  
