@@ -13,7 +13,7 @@ type Course = {
 };
 
 interface Broadcast {
-  id: string; // Ensure the backend sends a unique `id`
+  id: string; 
   title: string;
   message: string;
   createdAt: string;
@@ -28,10 +28,9 @@ export default function StudentHome() {
   const userId = localStorage.getItem('userId');
   const [broadcasts, setBroadcasts] = useState<Broadcast[]>([]);
 
-  // Fetch all courses and enrolled courses
   useEffect(() => {
     const fetchBroadcasts = async () => {
-      try {
+      try {                                                         
         const response = await axios.get<Broadcast[]>('http://localhost:4000/broadcast/all');
         setBroadcasts(response.data);
       } catch (err) {
@@ -44,7 +43,6 @@ export default function StudentHome() {
     if (userId) fetchEnrolledCourses();
   }, [userId]);
 
-  // Fetch all courses
   const fetchCourses = async () => {
     try {
       const response = await axios.get('http://localhost:4000/courses');
@@ -55,8 +53,6 @@ export default function StudentHome() {
       setMessage('Failed to load courses. Please try again later.');
     }
   };
-
-  // Fetch enrolled courses
   const fetchEnrolledCourses = async () => {
     try {
       const response = await axios.get(`http://localhost:4000/courses/enrolled-courses/${userId}`);
@@ -68,7 +64,6 @@ export default function StudentHome() {
     }
   };
 
-  // Enroll in a course
   const handleEnroll = async (courseId: string) => {
     if (!userId) {
       setMessage('You must be logged in to enroll in courses.');
@@ -84,13 +79,11 @@ export default function StudentHome() {
     }
   };
 
-  // Handle search inputs
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setSearchParams((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle search submission
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -106,15 +99,13 @@ export default function StudentHome() {
     }
   };
 
-  // Navigation buttons
   const handleDashboardRedirect = () => router.push('/course/dashboard');
   const handleQuizRedirect = () => router.push('/quiz');
   const handleForumRedirect = () => router.push('/student/forum');
   const handleProfileRedirect = () => router.push('/student/complete-profile');
-  const handleAnnouncementsRedirect = () => router.push('/student/announcements'); // Add this for announcements
+  const handleAnnouncementsRedirect = () => router.push('/student/announcements'); 
   return (
     <div className="container mt-5" style={{ position: 'relative' }}>
-      {/* Notifications Box */}
       <div
         style={{
           position: 'fixed',
@@ -168,15 +159,13 @@ export default function StudentHome() {
         )}
       </div>
 
-      {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1>Browse and Enroll in Courses</h1>
         <button className="btn btn-primary" onClick={handleForumRedirect}>
           Forum
         </button>
       </div>
-
-      {/* Action Buttons */}
+                        
       <div className="mb-4">
         <button className="btn btn-primary me-2" onClick={handleDashboardRedirect}>
           Go to Dashboard
@@ -192,7 +181,6 @@ export default function StudentHome() {
         </button>
       </div>
 
-      {/* Search Form */}
       <form className="mb-4" onSubmit={handleSearch}>
         <div className="row g-3">
           <div className="col-md-4">
@@ -223,10 +211,8 @@ export default function StudentHome() {
         </div>
       </form>
 
-      {/* Message */}
       {message && <div className="alert alert-info text-center">{message}</div>}
 
-      {/* Courses */}
       <div className="row">
         {courses && courses.length > 0 ? (
           courses.map((course) => {
