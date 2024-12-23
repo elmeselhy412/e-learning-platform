@@ -1,17 +1,22 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import mongoose, { Model, Types } from 'mongoose';
 import { Note, NoteDocument } from '../models/Notes.schema'; // Adjust path if necessary
 import { CreateCourseDto } from 'src/dto/create-course.dto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Course, CourseDocument } from 'src/models/course.schema';
+import { EnrollCourseDto } from 'src/dto/enroll-course.dto';
+import { User, UserDocument } from 'src/models/user.schema';
+import { UpdateCourseDto } from 'src/dto/update-course.dto';
 
 @Injectable()
 export class CoursesService {
+  
   constructor(
     @InjectModel(Note.name) private noteModel: Model<NoteDocument>,
     @InjectModel(Course.name) private courseModel:Model<CourseDocument>,
+    @InjectModel(User.name) private userModel:Model<UserDocument>
   ) {}
 
  
@@ -27,55 +32,26 @@ export class CoursesService {
 
     return newCourse.save();
   }
-  /**
-   * Get all courses
-   */
-  getAllCourses(): any[] {
-    // Placeholder for fetching all courses
-    return [
-      { id: '1234', name: 'Course 1', description: 'Introductory course' },
-      { id: '5678', name: 'Course 2', description: 'Advanced course' },
-    ];
+  async getAllCourses() {
+    return this.courseModel.find().exec();
   }
 
-  /**
-   * Get a course by ID
-   */
-  getCourseById(id: string): any {
-    const courses = this.getAllCourses();
-    const course = courses.find((c) => c.id === id);
-    if (!course) throw new NotFoundException(`Course with ID ${id} not found`);
+  async findById(id: string) {
+    // Validate the ID
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid ID format');
+    }
+  
+    // Find the course by ID
+    const course = await this.courseModel.findById(id).exec();
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+  
     return course;
   }
-
-  /**
-   * Update a course
-   */
-  updateCourse(id: string, createCourseDto: CreateCourseDto): any {
-    const course = this.getCourseById(id);
-    return { ...course, ...createCourseDto };
-  }
-
-  /**
-   * Delete a course
-   */
-  deleteCourse(id: string): string {
-    const courses = this.getAllCourses();
-    const courseIndex = courses.findIndex((c) => c.id === id);
-
-    if (courseIndex === -1) {
-      throw new NotFoundException(`Course with ID ${id} not found`);
-    }
-
-    // Simulate deletion
-    courses.splice(courseIndex, 1);
-
-    return `Course with ID ${id} deleted successfully`;
-  }
-
-  /**
-   * Adjust and optimize courses based on feedback and performance data
-   */
+  
+    
   async adjustAndOptimizeCourses(
     folderPath: string,
     feedbackData: Record<string, any>,
@@ -194,22 +170,140 @@ export class CoursesService {
 
     await this.noteModel.findByIdAndDelete(id);
   }
-  async addMediaToCourse(courseId: string, instructorId: string, mediaPaths: string[]): Promise<Course> {
+  
+
+  async addMediaToCourse(
+    courseId: string,
+    mediaPaths: string[],
+  ): Promise<Course> {
     // Find the course by its ID
     const course = await this.courseModel.findById(courseId).exec();
     if (!course) {
       throw new NotFoundException(`Course with ID ${courseId} not found.`);
     }
-  
-    // Check if the logged-in instructor matches the course instructor
-    if (course.instructorId !== instructorId) {
-      throw new ForbiddenException(`You are not authorized to modify this course.`);
-    }
-  
+
     // Append the new media paths to the existing media array
     course.media.push(...mediaPaths);
-  
+
     // Save and return the updated course document
     return course.save();
   }
+
+
+  async searchCourses(filters: { topic?: string; instructor?: string }) {
+    const query: any = {};
+    if (filters.topic) query.category = { $regex: filters.topic, $options: 'i' }; // Match category by topic
+    if (filters.instructor) query.createdBy = filters.instructor; // Match instructor by ID
+    return this.courseModel.find(query).exec();
+  }
+  
+  
+  async getUserEnrolledCourses(userId: string) {
+    // Step 1: Find the user
+    const user = await this.userModel.findById(userId).exec();
+  
+    if (!user) {
+      throw new Error('User not found');
+    }
+  
+    // Step 2: Fetch course details based on the ObjectId array in `user.courses`
+    const courses = await this.courseModel
+      .find({ _id: { $in: user.courses } }) // Use $in to fetch all matching courses
+      .exec();
+  
+    return courses; // Return full course details
+  }
+  async enrollStudentInCourse(userId: string, courseId: string) {
+    // Step 1: Find the user
+    const user = await this.userModel.findById(userId).exec();
+    if (!user) {
+      throw new Error('User not found');
+    }
+  
+    // Step 2: Find the course
+    const course = await this.courseModel.findById(courseId).exec();
+    if (!course) {
+      throw new Error('Course not found');
+    }
+  
+    // Step 3: Check if the user is already enrolled
+    if (user.courses.some((course) => course.toString() === courseId.toString())) {
+      throw new Error('Student already enrolled in this course');
+    }
+  
+    // Step 4: Enroll the student
+    user.courses.push(new mongoose.Types.ObjectId(courseId));
+    await user.save();
+  
+    return {
+      message: 'Enrollment successful!',
+      course,
+    };
+  }
+  async updateCourse(courseId: string, update: { content: string; updatedBy: string }) {
+    console.log('Received Payload:', update);
+  
+    // Fetch the course
+    const course = await this.courseModel.findById(courseId);
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+    console.log('Current Course:', course);
+  
+    // Only add to revisions if content is not empty
+    if (course.content && course.content.trim() !== '') {
+      console.log('Adding to revisions:', course.content);
+      course.revisions.push({
+        content: course.content, // Add only valid content
+        updatedBy: update.updatedBy,
+        updatedAt: new Date(),
+      });
+    } else {
+      console.warn('Skipping adding to revisions because content is empty');
+    }
+  
+    // Update the course content
+    course.content = update.content;
+    console.log('Updated Content:', course.content);
+  
+    return course.save();
+  }
+  
+  
+  // Retrieve all revisions for a course
+  async getRevisions(courseId: string) {
+    const course = await this.courseModel.findById(courseId, 'revisions');
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    return course.revisions;
+  }
+    
+  async rollbackToVersion(courseId: string, versionIndex: number) {
+    const course = await this.courseModel.findById(courseId);
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    if (!course.revisions[versionIndex]) {
+      throw new NotFoundException('Version not found');
+    }
+
+    // Retrieve the selected version
+    const selectedVersion = course.revisions[versionIndex];
+
+    // Update the current course content with the selected version
+    course.content = selectedVersion.content;
+
+    // Add the rollback operation as a new revision
+    course.revisions.push({
+      content: selectedVersion.content,
+      updatedBy: 'rollbackSystem', // System or admin performing the rollback
+      updatedAt: new Date(),
+    });
+
+    return course.save();
+  }
+  
 }

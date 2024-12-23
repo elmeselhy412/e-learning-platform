@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { isValidObjectId, Model } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 import * as nodemailer from 'nodemailer';
 import * as speakeasy from 'speakeasy';
@@ -13,6 +13,7 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthService } from 'src/auth/auth.service';
 import { UpdateProfileDto } from 'src/dto/update-profile.dto';
 import { FailedLogin } from '../models/failed-login.schema';
+import { UpdateProfileByInstructorDto } from 'src/dto/update-profile-by-instructor.dto';
 
 
 @Injectable()
@@ -51,14 +52,14 @@ export class UserService {
 
   // Create a new user
   async createUser(createUserDto: CreateUserDto) {
-    const { password, role, name, email } = createUserDto;
+    const { passwordHash, role, name, email } = createUserDto;
 
-    if (!password || !email || !role || !name) {
+    if (!passwordHash || !email || !role || !name) {
       throw new Error('Email, password, role, and name are required');
     }
 
     const saltRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    const hashedPassword = await bcrypt.hash(passwordHash, saltRounds);
 
     const newUser = new this.userModel({
       email,
@@ -120,42 +121,42 @@ export class UserService {
     return true;
   }
 
-  // Login and send OTP
-  // Login and send OTP
-async login(email: string, password: string): Promise<any> {
-  // Find the user by email
-  const user = await this.findOneByEmail(email);
-  if (!user) {
-    // Log "User not found" in FailedLogin collection
-    await new this.failedLoginModel({
-      username: email,
-      reason: 'User not found',
-      timestamp: new Date(),
-    }).save();
-    throw new UnauthorizedException('User not found');
+  async login(email: string, password: string): Promise<any> {
+    // Find the user by email
+    const user = await this.findOneByEmail(email);
+    if (!user) {
+      // Log "User not found" in FailedLogin collection
+      await new this.failedLoginModel({
+        username: email,
+        reason: 'User not found',
+        timestamp: new Date(),
+      }).save();
+      throw new UnauthorizedException('User not found');
+    }
+  
+    console.log('Password provided:', password); // Log provided password
+    console.log('Password hash in DB:', user.passwordHash); // Log stored passwordHash
+  
+    // Compare the provided password with the hashed password
+    const passwordMatch = await this.comparePasswords(password, user.passwordHash);
+    if (!passwordMatch) {
+      // Log "Invalid Password" in FailedLogin collection
+      await new this.failedLoginModel({
+        username: email,
+        reason: 'Invalid Password',
+        timestamp: new Date(),
+      }).save();
+      throw new UnauthorizedException('Incorrect password');
+    }
+  
+    // Generate and send OTP
+    const generatedOTP = this.generateOTP();
+    user.otp = generatedOTP;
+    await user.save();
+    await this.sendOtpEmail(user, generatedOTP);
+  
+    return { message: 'OTP sent to your email' };
   }
-
-  // Compare the provided password with the hashed password
-  const passwordMatch = await this.comparePasswords(password, user.passwordHash);
-  if (!passwordMatch) {
-    // Log "Invalid Password" in FailedLogin collection
-    await new this.failedLoginModel({
-      username: email,
-      reason: 'Invalid Password',
-      timestamp: new Date(),
-    }).save();
-    throw new UnauthorizedException('Incorrect password');
-  }
-
-  // Generate and send OTP
-  const generatedOTP = this.generateOTP();
-  user.otp = generatedOTP;
-  await user.save();
-  await this.sendOtpEmail(user, generatedOTP);
-
-  return { message: 'OTP sent to your email' };
-}
-
 
   // Verify OTP and complete login
   async verifyOtpAndLogin(email: string, otp: string): Promise<any> {
@@ -163,12 +164,36 @@ async login(email: string, password: string): Promise<any> {
     if (!isVerified) {
       throw new UnauthorizedException('Invalid OTP');
     }
-
+  
     const user = await this.findOneByEmail(email);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+  
+    console.log('Retrieved User:', user); // Debug to verify user object
+  
     const token = this.authService.generateToken(user);
-
-    return { message: 'Login successful', token };
+  
+    return {
+      success: true,
+      userId: user._id.toString(), // Convert ObjectId to string
+      email: user.email,
+      role: user.role,
+      token:token,
+    };
   }
+  
+  
+    async getUserById(userId: string) {
+      try {
+        const user = await this.userModel.findById(userId);
+        return user; // Ensure it returns the user document
+      } catch (error) {
+        console.error(`Error fetching user by ID: ${userId}`, error);
+        return null; // Return null if the user isn't found or there's an error
+      }
+    }
+    
 
   // Enroll in a course
   async enrollCourse(enrollCourseDto: EnrollCourseDto): Promise<UserDocument> {
@@ -271,7 +296,28 @@ async login(email: string, password: string): Promise<any> {
     );
     return updatedUser;
   }
+  async updateInstructorProfile(id: string, updateProfileDto: UpdateProfileByInstructorDto): Promise<UserDocument> {
+    const user = await this.userModel.findById(id);
 
+    if (!user) {
+        throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    // Merge new expertise and teaching interests with existing ones
+    if (updateProfileDto.expertise) {
+        user.expertise = Array.from(new Set([...(user.expertise || []), ...updateProfileDto.expertise]));
+    }
+    if (updateProfileDto.teachingInterests) {
+        user.teachingInterests = Array.from(new Set([...(user.teachingInterests || []), ...updateProfileDto.teachingInterests]));
+    }
+
+    await user.save();
+    return user;
+}
+
+  
+  
+  
     // Save the user to the database
   async deleteInstructor(id: string): Promise<{ message: string }> {
     const result = await this.userModel.deleteOne({ _id: id, role: 'instructor' });

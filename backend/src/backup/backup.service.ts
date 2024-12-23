@@ -1,30 +1,42 @@
-// import { Injectable } from '@nestjs/common';
-// import { MongoClient } from 'mongodb';
-// import { writeFileSync } from 'fs';
-// import * as path from 'path';
+import { Injectable, Logger } from '@nestjs/common';
+import { exec } from 'child_process';
+import * as path from 'path';
+import * as fs from 'fs';
 
-// @Injectable()
-// export class BackupService {
-//   private uri: string = 'mongodb://localhost:27017'; // MongoDB URI
-//   private client: MongoClient = new MongoClient(this.uri);
+@Injectable()
+export class BackupService {
+  private readonly logger = new Logger(BackupService.name);
+  private readonly backupPath = path.join(__dirname, '..', '..', 'backups'); // Backup directory
+  private readonly dbName = 'elearning-platform'; // Replace with your database name
+  private readonly dbHost = 'localhost'; // MongoDB host
+  private readonly dbPort = 27017; // MongoDB port
 
-//   async backupData() {
-//     try {
-//       await this.client.connect();
-//       const db = this.client.db('elearning');
-//       const users = await db.collection('users').find().toArray();
-//       const courses = await db.collection('courses').find().toArray();
 
-//       const backupPath = path.join(__dirname, '../../backups', `backup_${new Date().toISOString()}.json`);
-//       const backupData = { users, courses };
+  constructor() {
+    // Ensure backup directory exists
+    if (!fs.existsSync(this.backupPath)) {
+      fs.mkdirSync(this.backupPath, { recursive: true });
+    }
+  }
 
-//       writeFileSync(backupPath, JSON.stringify(backupData, null, 2));
-//       console.log('Backup completed successfully:', backupPath);
-//     } catch (error) {
-//       console.error('Error during backup:', error);
-//     } finally {
-//       await this.client.close();
-//     }
-//   }
-// }
+  async backupDatabase(): Promise<void> {
+    const timestamp = new Date().toISOString().replace(/[-T:.Z]/g, '');
+    const backupDir = path.join(this.backupPath, `backup_${timestamp}`);
 
+    // Construct mongodump command
+    const command = `mongodump --host ${this.dbHost} --port ${this.dbPort} --db ${this.dbName} --out ${backupDir}`;
+
+    this.logger.log(`Starting backup: ${backupDir}`);
+    
+    exec(command, (error, stdout, stderr) => {
+      if (error) {
+        this.logger.error(`Backup failed: ${error.message}`);
+        return;
+      }
+      if (stderr) {
+        this.logger.warn(`Backup warnings: ${stderr}`);
+      }
+      this.logger.log(`Backup successful: ${stdout}`);
+    });
+  }
+}
