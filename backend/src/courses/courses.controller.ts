@@ -145,12 +145,18 @@ export class CoursesController {
     @Query('instructor') instructor?: string
   ) {
     try {
-      const courses = await this.coursesService.searchCourses({ title, instructor });
+      // Remove undefined or empty string values
+      const filters: { title?: string; instructor?: string } = {};
+      if (title && title.trim()) filters.title = title.trim();
+      if (instructor && instructor.trim()) filters.instructor = instructor.trim();
+  
+      const courses = await this.coursesService.searchCourses(filters);
       return { courses };
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
+  
   
   
   

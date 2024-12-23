@@ -86,11 +86,16 @@ export default function StudentHome() {
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
+  
+    const { title, instructor } = searchParams;
+  
+    // Prepare query params, excluding empty ones
+    const params: Record<string, string> = {};
+    if (title.trim()) params.title = title.trim();
+    if (instructor.trim()) params.instructor = instructor.trim();
+  
     try {
-      const { title, instructor } = searchParams;
-      const response = await axios.get('http://localhost:4000/courses/search-courses', {
-        params: { title, instructor },
-      });
+      const response = await axios.get('http://localhost:4000/courses/search-courses', { params });
       setCourses(response.data.courses);
       setMessage('');
     } catch (error) {
@@ -98,7 +103,7 @@ export default function StudentHome() {
       setMessage('No courses match your search criteria.');
     }
   };
-
+  
   const handleDashboardRedirect = () => router.push('/course/dashboard');
   const handleQuizRedirect = () => router.push('/quiz');
   const handleForumRedirect = () => router.push('/student/forum');

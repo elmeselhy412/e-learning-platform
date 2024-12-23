@@ -210,11 +210,17 @@ export class CoursesService {
   }
   async searchCourses(filters: { title?: string; instructor?: string }) {
     const query: any = {};
-    if (filters.title) query.title = { $regex: filters.title, $options: 'i' }; // Match title (partial and case-insensitive)
-    if (filters.instructor) query.createdBy = filters.instructor; // Match instructor by ID
+  
+    if (filters.title && filters.title.trim()) {
+      query.title = { $regex: filters.title.trim(), $options: 'i' }; // Match title (partial and case-insensitive)
+    }
+  
+    if (filters.instructor && filters.instructor.trim()) {
+      query.createdBy = filters.instructor.trim(); // Match instructor by ID
+    }
+  
     return this.courseModel.find(query).exec();
   }
-  
   
   
   
