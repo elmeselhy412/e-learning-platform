@@ -6,12 +6,15 @@ import { ConfigModule } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './JwtStrategy';
 import { MongooseModule } from '@nestjs/mongoose';
+import { User, UserSchema } from '../models/user.schema'
 import { FailedLogin, FailedLoginSchema } from 'src/models/failed-login.schema';
 
 @Module({
   imports: [
     ConfigModule, // Ensure ConfigModule is imported
-    MongooseModule.forFeature([{ name: FailedLogin.name, schema: FailedLoginSchema }]),
+    MongooseModule.forFeature([{ name: User.name, schema: UserSchema },
+    { name: FailedLogin.name, schema: FailedLoginSchema }
+    ]),
     JwtModule.register({
       secret: 'JWT_SECRET',
       signOptions: { expiresIn: '1h' },

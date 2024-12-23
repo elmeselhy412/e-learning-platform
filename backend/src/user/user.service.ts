@@ -199,17 +199,20 @@ export class UserService {
     return this.userModel.find({ role: 'student' });
   }
 
-  async updateStudent(id: string, body: any): Promise<User> {
+  async updateStudent(id: string, body: any): Promise<{ message: string, updatedUser: User }> {
     const updatedUser = await this.userModel.findOneAndUpdate(
       { _id: id, role: 'student' },
       body,
       { new: true }
     );
-    return updatedUser;
+
+    if (!updatedUser) throw new Error('Student not found');
+    return { message: 'Student updated successfully', updatedUser };
   }
 
   async deleteStudent(id: string): Promise<{ message: string }> {
     const result = await this.userModel.deleteOne({ _id: id, role: 'student' });
+    if (result.deletedCount === 0) throw new Error('Student not found');
     return { message: 'Student deleted successfully' };
   }
 
@@ -217,17 +220,20 @@ export class UserService {
     return this.userModel.find({ role: 'instructor' });
   }
 
-  async updateInstructor(id: string, body: any): Promise<User> {
+  async updateInstructor(id: string, body: any): Promise<{ message: string, updatedUser: User }> {
     const updatedUser = await this.userModel.findOneAndUpdate(
       { _id: id, role: 'instructor' },
       body,
       { new: true }
     );
-    return updatedUser;
+
+    if (!updatedUser) throw new Error('Instructor not found');
+    return { message: 'Instructor updated successfully', updatedUser };
   }
 
   async deleteInstructor(id: string): Promise<{ message: string }> {
     const result = await this.userModel.deleteOne({ _id: id, role: 'instructor' });
-    return { message: 'Student deleted successfully' };
+    if (result.deletedCount === 0) throw new Error('Instructor not found');
+    return { message: 'Instructor deleted successfully' };
   }
 }

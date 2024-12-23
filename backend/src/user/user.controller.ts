@@ -110,6 +110,7 @@ export class UserController {
   async updateStudent(@Param('id') id: string, @Body() body) {
     try {
       const upd = this.userService.updateStudent(id, body);
+      return upd;
     } catch (error) {
       console.log('Error updating student', error.message);
       throw new HttpException(
@@ -151,7 +152,7 @@ export class UserController {
     }
   }
 
-  @Put('insturctors/:id')
+  @Put('instructors/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   async updateInstructor(@Param('id') id: string, @Body() body) {
@@ -166,7 +167,7 @@ export class UserController {
     }
   }
 
-  @Delete('instructor/:id')
+  @Delete('instructors/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   async deleteInstructor(@Param('id') id: string) {

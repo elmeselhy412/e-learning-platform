@@ -8,20 +8,26 @@ import { ConfigModule } from '@nestjs/config';
 import { JwtStrategy } from 'src/auth/JwtStrategy';
 import { JwtModule, JwtService } from '@nestjs/jwt';
 import { AuthModule } from 'src/auth/auth.module';
+import { FailedLoginService } from './failed.login.service';
+import { FailedLogin, FailedLoginSchema } from '../models/failed-login.schema';
+
 
 @Module({
-  imports: [MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-  CourseModule,
-  ConfigModule,
+  imports: [MongooseModule.forFeature([
+    { name: User.name, schema: UserSchema },
+    { name: FailedLogin.name, schema: FailedLoginSchema },
+  ]),
+    CourseModule,
+    ConfigModule,
   JwtModule.register({
     secret: 'JWT_SECRET', // Use your hardcoded secret
     signOptions: { expiresIn: '3h' }, // Token expiration
   }),
   forwardRef(() => AuthModule)
-],
+  ],
 
   controllers: [UserController],
-  providers: [UserService, JwtStrategy],
-  exports: [UserService],
+  providers: [UserService, JwtStrategy, FailedLoginService],
+  exports: [UserService, FailedLoginService],
 })
-export class UserModule {}
+export class UserModule { }

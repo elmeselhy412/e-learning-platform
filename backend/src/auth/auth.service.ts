@@ -4,6 +4,7 @@ import { Model } from 'mongoose';
 import { FailedLogin } from 'src/models/failed-login.schema';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from '../models/user.schema';
+import * as bcrypt from 'bcrypt';
 import { timestamp } from 'rxjs';
 
 
@@ -20,9 +21,19 @@ export class AuthService {
   }
 
   async validateAdmin(username: string, password: string): Promise<boolean> {
-    const adminUserName = 'admin'; // Hardcoded admin user
-    const adminPassword = 'password123'; // Hardcoded admin password
-    return username === adminUserName && password === adminPassword;
+    const admin = await this.userModel.findOne({ name: username, role: 'admin' }).exec();
+    if (admin)
+      var isMatch = await bcrypt.compare(password, admin.passwordHash);
+
+    if (!admin || !isMatch) {
+      await new this.failedLoginModel({
+        username,
+        reason: admin ? 'Invalid Password' : 'Admin not found',
+        timestamp: new Date(),
+      }).save();
+      return false;
+    }
+    return true;
   }
 
   async findUserByUsername(username: string): Promise<User | null> {
