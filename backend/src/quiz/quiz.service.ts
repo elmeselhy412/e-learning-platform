@@ -5,14 +5,15 @@ import { Quiz } from '../models/quiz.schema';
 import { CreateQuizDto } from '../dto/create-quiz.dto';
 import { UserPerformanceDto } from '../dto/user-performance.dto';  // Importing the DTO
 import { Question } from 'src/models/Question.schema';
+import { BroadcastService } from 'src/broadcast/broadcast.service';
 
 @Injectable()
 export class QuizService {
   constructor(
     @InjectModel('Quiz') private readonly quizModel: Model<Quiz>,
-    @InjectModel('Question') private readonly questionModel: Model<Question>, // Inject QuestionModel
+    @InjectModel('Question') private readonly questionModel: Model<Question>,
+    private broadcastService: BroadcastService, 
   ) {}
-  // Get the next adaptive question
   async getNextQuestion(
     _id: string,
     performance: { correctAnswers: number; totalQuestions: number }
@@ -51,6 +52,12 @@ export class QuizService {
   async createQuiz(createQuizDto: CreateQuizDto) {
     const newQuiz = new this.quizModel(createQuizDto);
     try {
+      await this.broadcastService.createBroadcast(
+        'New Quiz Created',
+        `A new Quiz has been added to the platform.`,
+        ['student', 'instructor', 'admin'], 
+      );   
+
       return await newQuiz.save();
     } catch (error) {
       console.error('Error creating quiz:', error.message);

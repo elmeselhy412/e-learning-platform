@@ -32,15 +32,17 @@ export const DataBackup: React.FC = () => {
     fetchBackups();
   }, []);
 
-  const scheduleBackup = async () => {
+   // Schedule backup
+   const scheduleBackup = async () => {
     try {
-      const response = await axios.post<{ message: string }>('http://localhost:4000/backup/schedule', { schedule });
-      alert(`Backup scheduled successfully: ${response.data.message}`);
+      const response = await axios.post('http://localhost:4000/backup/schedule', { schedule });
+      alert(`Backup schedule updated: ${response.data.message}`);
     } catch (err) {
       setError('Failed to schedule backup. Please try again later.');
       console.error('Error scheduling backup:', err);
     }
   };
+  
 
   const triggerBackup = async () => {
     try {
@@ -66,24 +68,26 @@ export const DataBackup: React.FC = () => {
   };
 
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1 style={{ color: '#333', fontSize: '24px' }}>Data Backup and Maintenance</h1>
+    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', color: '#333' }}>
+      <h1 style={{ color: 'white', fontSize: '26px', marginBottom: '20px' }}>Data Backup and Maintenance</h1>
 
       {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
 
-      <div style={{ marginBottom: '20px' }}>
-        <h2 style={{ color: '#333', fontSize: '20px' }}>Schedule Backup</h2>
-        <label htmlFor="schedule" style={{ fontWeight: 'bold' }}>Choose Frequency:</label>
+      <div style={{ marginBottom: '30px', backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '8px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)' }}>
+        <h2 style={{ color: '#333', fontSize: '20px', marginBottom: '10px' }}>Schedule Backup</h2>
+        <label htmlFor="schedule" style={{ fontWeight: 'bold', marginRight: '10px' }}>Choose Frequency:</label>
         <select
           id="schedule"
           value={schedule}
           onChange={(e) => setSchedule(e.target.value)}
           style={{
-            marginLeft: '10px',
-            padding: '5px 10px',
-            borderRadius: '5px',
-            border: '1px solid #ddd',
+            padding: '8px 12px',
+            borderRadius: '6px',
+            border: '1px solid #ccc',
             fontSize: '16px',
+            marginRight: '10px',
+            color: '#333',
+            backgroundColor: '#fff',
           }}
         >
           <option value="daily">Daily</option>
@@ -93,13 +97,13 @@ export const DataBackup: React.FC = () => {
         <button
           onClick={scheduleBackup}
           style={{
-            marginLeft: '10px',
-            padding: '5px 10px',
+            padding: '8px 16px',
             backgroundColor: '#007bff',
             color: '#fff',
             border: 'none',
-            borderRadius: '5px',
+            borderRadius: '6px',
             cursor: 'pointer',
+            marginRight: '10px',
           }}
         >
           Schedule
@@ -107,12 +111,11 @@ export const DataBackup: React.FC = () => {
         <button
           onClick={triggerBackup}
           style={{
-            marginLeft: '10px',
-            padding: '5px 10px',
+            padding: '8px 16px',
             backgroundColor: '#28a745',
             color: '#fff',
             border: 'none',
-            borderRadius: '5px',
+            borderRadius: '6px',
             cursor: 'pointer',
           }}
         >
@@ -121,7 +124,7 @@ export const DataBackup: React.FC = () => {
       </div>
 
       <div>
-        <h2 style={{ color: '#333', fontSize: '20px' }}>Backup History</h2>
+        <h2 style={{ color: 'white', fontSize: '20px', marginBottom: '10px' }}>Backup History</h2>
         {loading ? (
           <p>Loading backups...</p>
         ) : (
@@ -132,49 +135,58 @@ export const DataBackup: React.FC = () => {
               marginTop: '20px',
               backgroundColor: '#fff',
               boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+              borderRadius: '8px',
+              overflow: 'hidden',
             }}
           >
             <thead>
-              <tr style={{ backgroundColor: '#f4f4f4', textAlign: 'left', color: '#333' }}>
-                <th style={{ padding: '10px', border: '1px solid #ddd' }}>Timestamp</th>
-                <th style={{ padding: '10px', border: '1px solid #ddd' }}>Status</th>
-                <th style={{ padding: '10px', border: '1px solid #ddd' }}>Actions</th>
+              <tr style={{ backgroundColor: '#f4f4f4', color: '#333', textAlign: 'left' }}>
+                <th style={{ padding: '12px', border: '1px solid #ddd' }}>Timestamp</th>
+                <th style={{ padding: '12px', border: '1px solid #ddd' }}>Status</th>
+                <th style={{ padding: '12px', border: '1px solid #ddd' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
-  {backups.length > 0 ? (
-    backups.map((backup) => (
-      <tr key={backup.id}>
-        <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-          {new Date(backup.timestamp).toLocaleString()} {/* Convert ISO to readable format */}
-        </td>
-        <td style={{ padding: '10px', border: '1px solid #ddd' }}>{backup.status}</td>
-        <td style={{ padding: '10px', border: '1px solid #ddd' }}>
-          <button
-            onClick={() => restoreBackup(backup.id)}
-            style={{
-              padding: '5px 10px',
-              backgroundColor: '#28a745',
-              color: '#fff',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-            }}
-          >
-            Restore
-          </button>
-        </td>
-      </tr>
-    ))
-  ) : (
-    <tr>
-      <td colSpan={3} style={{ padding: '10px', textAlign: 'center' }}>
-        No backups available.
-      </td>
-    </tr>
-  )}
-</tbody>
-
+              {backups.length > 0 ? (
+                backups.map((backup) => (
+                  <tr key={backup.id}>
+                    <td style={{ padding: '10px', border: '1px solid #ddd', color: '#555' }}>
+                      {new Date(backup.timestamp).toLocaleString()}
+                    </td>
+                    <td
+                      style={{
+                        padding: '10px',
+                        border: '1px solid #ddd',
+                        color: backup.status === 'Completed' ? '#28a745' : backup.status === 'Failed' ? '#dc3545' : '#ffc107',
+                      }}
+                    >
+                      {backup.status}
+                    </td>
+                    <td style={{ padding: '10px', border: '1px solid #ddd' }}>
+                      <button
+                        onClick={() => restoreBackup(backup.id)}
+                        style={{
+                          padding: '8px 12px',
+                          backgroundColor: '#28a745',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Restore
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={3} style={{ padding: '12px', textAlign: 'center', color: '#555' }}>
+                    No backups available.
+                  </td>
+                </tr>
+              )}
+            </tbody>
           </table>
         )}
       </div>

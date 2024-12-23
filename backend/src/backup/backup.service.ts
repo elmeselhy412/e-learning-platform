@@ -10,7 +10,7 @@ export class BackupService {
   private readonly dbName = 'elearning-platform'; // Replace with your database name
   private readonly dbHost = 'localhost'; // MongoDB host
   private readonly dbPort = 27017; // MongoDB port
-
+  private currentSchedule: 'daily' | 'weekly' | 'monthly' = 'daily'; // Default schedule
 
   constructor() {
     // Ensure backup directory exists
@@ -23,66 +23,74 @@ export class BackupService {
     const timestamp = new Date().toISOString().replace(/[-T:.Z]/g, '');
     const backupDir = path.join(this.backupPath, `backup_${timestamp}`);
 
-    // Construct mongodump command
     const command = `mongodump --host ${this.dbHost} --port ${this.dbPort} --db ${this.dbName} --out ${backupDir}`;
 
     this.logger.log(`Starting backup: ${backupDir}`);
-    
-    exec(command, (error, stdout, stderr) => {
-      if (error) {
-        this.logger.error(`Backup failed: ${error.message}`);
-        return;
-      }
-      if (stderr) {
-        this.logger.warn(`Backup warnings: ${stderr}`);
-      }
-      this.logger.log(`Backup successful: ${stdout}`);
+
+    return new Promise<void>((resolve, reject) => {
+      exec(command, (error, stdout, stderr) => {
+        if (error) {
+          this.logger.error(`Backup failed: ${error.message}`);
+          reject(error);
+          return;
+        }
+        if (stderr) {
+          this.logger.warn(`Backup warnings: ${stderr}`);
+        }
+        this.logger.log(`Backup successful: ${stdout}`);
+        resolve();
+      });
     });
   }
+
   async listBackups(): Promise<{ id: string; timestamp: string; status: string }[]> {
     try {
-      const backupFiles = fs.readdirSync(this.backupPath); // Read all directories in the backup path
-  
+      const backupFiles = fs.readdirSync(this.backupPath);
+
       return backupFiles
-        .filter((file) => file.startsWith('backup_')) // Only process folders starting with 'backup_'
+        .filter((file) => file.startsWith('backup_'))
         .map((file) => {
-          // Extract timestamp from folder name using regex
-          const timestampMatch = file.match(/backup_(\d{14})/); // Matches 14-digit timestamp
+          const timestampMatch = file.match(/backup_(\d{14})/);
           const timestamp = timestampMatch ? timestampMatch[1] : null;
-  
+
           if (!timestamp) {
-            console.warn(`Invalid backup folder name: ${file}`);
-            return null; // Skip invalid folder names
+            this.logger.warn(`Invalid backup folder name: ${file}`);
+            return null;
           }
-  
-          // Convert timestamp to a valid date string
+
           const date = new Date(
-            parseInt(timestamp.substring(0, 4)), // Year
-            parseInt(timestamp.substring(4, 6)) - 1, // Month (0-based)
-            parseInt(timestamp.substring(6, 8)), // Day
-            parseInt(timestamp.substring(8, 10)), // Hours
-            parseInt(timestamp.substring(10, 12)), // Minutes
-            parseInt(timestamp.substring(12, 14)) // Seconds
+            parseInt(timestamp.substring(0, 4)),
+            parseInt(timestamp.substring(4, 6)) - 1,
+            parseInt(timestamp.substring(6, 8)),
+            parseInt(timestamp.substring(8, 10)),
+            parseInt(timestamp.substring(10, 12)),
+            parseInt(timestamp.substring(12, 14))
           );
-  
-          // Validate the date
+
           if (isNaN(date.getTime())) {
-            console.warn(`Invalid timestamp in folder name: ${file}`);
-            return null; // Skip invalid timestamps
+            this.logger.warn(`Invalid timestamp in folder name: ${file}`);
+            return null;
           }
-  
+
           return {
-            id: file, // Use the folder name as the ID
-            timestamp: date.toISOString(), // Convert to ISO string
-            status: 'Completed', // Assuming all backups are completed
+            id: file,
+            timestamp: date.toISOString(),
+            status: 'Completed',
           };
         })
-        .filter((backup) => backup !== null); // Filter out null entries
+        .filter((backup) => backup !== null);
     } catch (error) {
-      console.error('Error listing backups:', error.message);
+      this.logger.error('Error listing backups:', error.message);
       throw new Error('Failed to list backup files');
     }
   }
-  
-  
+
+  setSchedule(schedule: 'daily' | 'weekly' | 'monthly'): void {
+    this.currentSchedule = schedule;
+    this.logger.log(`Backup schedule updated to: ${schedule}`);
+  }
+
+  getSchedule(): 'daily' | 'weekly' | 'monthly' {
+    return this.currentSchedule;
+  }
 }

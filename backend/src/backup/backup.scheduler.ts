@@ -1,19 +1,41 @@
-import { Injectable } from '@nestjs/common';
-import { Cron, CronExpression } from '@nestjs/schedule';
+import { Injectable, Logger } from '@nestjs/common';
+import { CronExpression } from '@nestjs/schedule';
 import { BackupService } from './backup.service';
 
 @Injectable()
 export class BackupScheduler {
-  constructor(private readonly backupService: BackupService) {}
+  private readonly logger = new Logger(BackupScheduler.name);
+  private intervals: { [key: string]: number } = {
+    daily: 24 * 60 * 60 * 1000, // 1 day
+    weekly: 7 * 24 * 60 * 60 * 1000, // 1 week
+    monthly: 30 * 24 * 60 * 60 * 1000, // 1 month (approx.)
+  };
+  private intervalId: NodeJS.Timeout | null = null;
 
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT) // Schedule the backup at 2:00 AM daily
-  async handleScheduledBackup(): Promise<void> {
-    console.log('Scheduled backup started...');
-    try {
-      await this.backupService.backupDatabase();
-      console.log('Scheduled backup completed successfully.');
-    } catch (error) {
-      console.error('Scheduled backup failed:', error.message);
+  constructor(private readonly backupService: BackupService) {
+    this.startScheduler(); // Initialize with the default schedule
+  }
+
+  private startScheduler(): void {
+    const schedule = this.backupService.getSchedule();
+    this.setSchedule(schedule);
+  }
+
+  setSchedule(schedule: 'daily' | 'weekly' | 'monthly'): void {
+    if (this.intervalId) {
+      clearInterval(this.intervalId); // Clear previous interval
     }
+
+    const intervalMs = this.intervals[schedule];
+    this.logger.log(`Setting backup schedule to: ${schedule} (${intervalMs} ms)`);
+
+    this.intervalId = setInterval(async () => {
+      try {
+        await this.backupService.backupDatabase();
+        this.logger.log('Scheduled backup executed successfully.');
+      } catch (error) {
+        this.logger.error('Scheduled backup failed:', error.message);
+      }
+    }, intervalMs);
   }
 }

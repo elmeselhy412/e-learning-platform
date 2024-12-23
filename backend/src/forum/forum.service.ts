@@ -3,17 +3,26 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Forum } from '../models/forum.schema';
 import { UserService } from '../user/user.service'; // Import UserService
+import { BroadcastService } from 'src/broadcast/broadcast.service';
 
 @Injectable()
 export class ForumService {
   constructor(
     @InjectModel('Forum') private readonly forumModel: Model<Forum>,
     private readonly userService: UserService, // Inject UserService
+    private broadcastService: BroadcastService, // Inject BroadcastService
+
   ) {}
 
   async createForum(createForumDto: { instructorId: string; topic: string }) {
     const { instructorId, topic } = createForumDto;
+
     const newForum = new this.forumModel({ instructorId, topic, messages: [] });
+    await this.broadcastService.createBroadcast(
+      'New Forum Created',
+      `A new Forum "${newForum.topic}" has been added to the platform.`,
+      ['student', 'instructor', 'admin'], 
+    );   
     return await newForum.save();
   }
 

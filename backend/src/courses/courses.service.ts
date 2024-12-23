@@ -8,6 +8,7 @@ import * as path from 'path';
 import { Course, CourseDocument } from 'src/models/course.schema';
 import { EnrollCourseDto } from 'src/dto/enroll-course.dto';
 import { User, UserDocument } from 'src/models/user.schema';
+import { BroadcastService } from 'src/broadcast/broadcast.service';
 
 @Injectable()
 export class CoursesService {
@@ -15,7 +16,9 @@ export class CoursesService {
   constructor(
     @InjectModel(Note.name) private noteModel: Model<NoteDocument>,
     @InjectModel(Course.name) private courseModel:Model<CourseDocument>,
-    @InjectModel(User.name) private userModel:Model<UserDocument>
+    @InjectModel(User.name) private userModel:Model<UserDocument>,
+    private broadcastService: BroadcastService, // Inject BroadcastService
+
   ) {}
 
  
@@ -25,9 +28,13 @@ export class CoursesService {
     if (existingCourse) {
       throw new BadRequestException('A course with this title already exists');
     }
-
-    // Create a new course
     const newCourse = new this.courseModel(createCourseDto);
+
+    await this.broadcastService.createBroadcast(
+      'New Course Created',
+      `A new course titled "${newCourse.title}" has been added to the platform.`,
+      ['student', 'instructor', 'admin'], 
+    );   
 
     return newCourse.save();
   }
@@ -216,7 +223,11 @@ export class CoursesService {
     // Step 4: Enroll the student
     user.courses.push(new mongoose.Types.ObjectId(courseId));
     await user.save();
-  
+    await this.broadcastService.createBroadcast(
+      'User enrolled in course',
+      `"${user.name}" has been enrolled in course ${course.title}.`,
+      ['student', 'instructor', 'admin'], 
+    );   
     return {
       message: 'Enrollment successful!',
       course,
@@ -231,6 +242,12 @@ async archiveCourse(courseId: string, archived: boolean): Promise<Course> {
   }
 
   course.archived = archived; // Set the archive status to true or false
+  
+  await this.broadcastService.createBroadcast(
+    'Course Archived',
+    `Course "${course.title}" has been added to archives.`,
+    ['student', 'instructor', 'admin'], 
+  );   
   return course.save(); // Save the updated course and return it
 }
 
@@ -242,7 +259,12 @@ async archiveCourse(courseId: string, archived: boolean): Promise<Course> {
       throw new NotFoundException(`Course with ID ${courseId} not found.`);
     }
 
-    await this.courseModel.findByIdAndDelete(courseId); // Delete the course
+   const deleted =  await this.courseModel.findByIdAndDelete(courseId); // Delete the course
+    await this.broadcastService.createBroadcast(
+      'Deleted Course',
+      `course titled "${deleted.title}" has been deleted from the platform.`,
+      ['student', 'instructor', 'admin'], 
+    );   
     return { message: `Course with ID ${courseId} has been deleted.` };
   }
     
