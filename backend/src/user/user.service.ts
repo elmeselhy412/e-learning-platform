@@ -271,7 +271,13 @@ export class UserService {
 
     return user;
   }
-
+  async getProfileDetails(id: string): Promise<UserDocument | null> {
+    const user = await this.userModel.findById(id, 'learningPreferences subjectsOfInterest').exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    return user;
+  }
   // Fetch enrolled courses for a user
   async getEnrolledCourses(userId: string): Promise<CourseDocument[]> {
     const user = await this.userModel

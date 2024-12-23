@@ -179,12 +179,13 @@ export class CoursesService {
     // Save and return the updated course document
     return course.save();
   }
-  async searchCourses(filters: { topic?: string; instructor?: string }) {
+  async searchCourses(filters: { title?: string; instructor?: string }) {
     const query: any = {};
-    if (filters.topic) query.category = { $regex: filters.topic, $options: 'i' }; // Match category by topic
+    if (filters.title) query.title = { $regex: filters.title, $options: 'i' }; // Match title (partial and case-insensitive)
     if (filters.instructor) query.createdBy = filters.instructor; // Match instructor by ID
     return this.courseModel.find(query).exec();
   }
+  
   
   
   async getUserEnrolledCourses(userId: string) {

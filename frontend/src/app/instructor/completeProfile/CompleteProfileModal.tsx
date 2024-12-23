@@ -61,6 +61,7 @@ export default function CompleteProfileModal({ onClose }: CompleteProfileModalPr
           teachingInterests,
         }
       );
+      console.log(response)
 
       setMessage(response.data.message || 'Profile updated successfully!');
     } catch (error) {

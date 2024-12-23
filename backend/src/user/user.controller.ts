@@ -106,7 +106,17 @@ async updateUserProfile(
 ) {
   return this.userService.updateUserProfile(id, updateProfileDto);
 }
-
+@Get('studentDetails/:id')
+  async fetchStudentProfileDetails(@Param('id') id: string) {
+    const userProfile = await this.userService.getProfileDetails(id);
+    if (!userProfile) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    return {
+      learningPreferences: userProfile.learningPreferences,
+      subjectsOfInterest: userProfile.subjectsOfInterest,
+    };
+  }
 @Patch('updateInstructor/:id')
 async updateInstructorProfile(
   @Param('id') id: string,
@@ -184,7 +194,7 @@ async updateInstructorProfile(
     console.log('ID:', id);
     console.log('Body:', body);
     try {
-      const upd = await this.userService.updateInstructor(id, body);
+      const upd = await this.userService.updateInstructorProfile(id, body);
       console.log('Updated User:', upd);
       return upd;
     } catch (error) {

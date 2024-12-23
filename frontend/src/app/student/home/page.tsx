@@ -18,9 +18,10 @@ interface Broadcast {
   message: string;
   createdAt: string;
 }
+
 export default function StudentHome() {
   const [courses, setCourses] = useState<Course[]>([]);
-  const [searchParams, setSearchParams] = useState({ topic: '', instructor: '' });
+  const [searchParams, setSearchParams] = useState({ title: '', instructor: '' });
   const [message, setMessage] = useState('');
   const [enrolledCourses, setEnrolledCourses] = useState<string[]>([]);
   const router = useRouter();
@@ -90,9 +91,19 @@ export default function StudentHome() {
   };
 
   // Handle search submission
-  const handleSearch = (e: React.FormEvent) => {
+  const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
-    fetchCourses();
+    try {
+      const { title, instructor } = searchParams;
+      const response = await axios.get('http://localhost:4000/courses/search-courses', {
+        params: { title, instructor },
+      });
+      setCourses(response.data.courses);
+      setMessage('');
+    } catch (error) {
+      console.error('Error searching courses:', error);
+      setMessage('No courses match your search criteria.');
+    }
   };
 
   // Navigation buttons
@@ -105,57 +116,58 @@ export default function StudentHome() {
     <div className="container mt-5" style={{ position: 'relative' }}>
       {/* Notifications Box */}
       <div
-  style={{
-    position: 'fixed', // Ensure it stays in the top-right corner even during scrolling
-    top: '20px', // Distance from the top
-    right: '20px', // Distance from the right edge
-    width: '300px', // Fixed width
-    backgroundColor: '#f8f9fa', // Light background
-    border: '1px solid #ddd',
-    borderRadius: '8px',
-    padding: '15px',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
-    zIndex: 1000, // Ensures it appears above other elements
-  }}
->
-  <h5 style={{ color: '#333', fontWeight: 'bold' }}>Notifications</h5>
-  {broadcasts.length > 0 ? (
-    <ul
-      style={{
-        listStyle: 'none',
-        padding: 0,
-        maxHeight: '400px',
-        overflowY: 'auto',
-      }}
-    >
-      {broadcasts.map((broadcast, index) => (
-        <li
-          key={broadcast.id || index}
-          style={{
-            marginBottom: '10px',
-            padding: '10px',
-            backgroundColor: '#fff',
-            border: '1px solid #ddd',
-            borderRadius: '5px',
-            boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
-          }}
-        >
-          <h6 style={{ fontSize: '14px', fontWeight: 'bold', color: '#007bff' }}>
-            {broadcast.title}
-          </h6>
-          <p style={{ margin: 0, fontSize: '12px', color: '#555' }}>
-            {broadcast.message}
-          </p>
-          <small style={{ color: '#888' }}>
-            {new Date(broadcast.createdAt).toLocaleString()}
-          </small>
-        </li>
-      ))}
-    </ul>
-  ) : (
-    <p style={{ color: '#888', fontSize: '14px' }}>No Notifications available.</p>
-  )}
-</div>
+        style={{
+          position: 'fixed',
+          top: '20px',
+          right: '20px',
+          width: '300px',
+          backgroundColor: '#f8f9fa',
+          border: '1px solid #ddd',
+          borderRadius: '8px',
+          padding: '15px',
+          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+          zIndex: 1000,
+        }}
+      >
+        <h5 style={{ color: '#333', fontWeight: 'bold' }}>Notifications</h5>
+        {broadcasts.length > 0 ? (
+          <ul
+            style={{
+              listStyle: 'none',
+              padding: 0,
+              maxHeight: '400px',
+              overflowY: 'auto',
+            }}
+          >
+            {broadcasts.map((broadcast, index) => (
+              <li
+                key={broadcast.id || index}
+                style={{
+                  marginBottom: '10px',
+                  padding: '10px',
+                  backgroundColor: '#fff',
+                  border: '1px solid #ddd',
+                  borderRadius: '5px',
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                }}
+              >
+                <h6 style={{ fontSize: '14px', fontWeight: 'bold', color: '#007bff' }}>
+                  {broadcast.title}
+                </h6>
+                <p style={{ margin: 0, fontSize: '12px', color: '#555' }}>
+                  {broadcast.message}
+                </p>
+                <small style={{ color: '#888' }}>
+                  {new Date(broadcast.createdAt).toLocaleString()}
+                </small>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p style={{ color: '#888', fontSize: '14px' }}>No Notifications available.</p>
+        )}
+      </div>
+
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1>Browse and Enroll in Courses</h1>
@@ -175,7 +187,7 @@ export default function StudentHome() {
         <button className="btn btn-info" onClick={handleAnnouncementsRedirect}>
           View Announcements
         </button>
-        <button className="btn btn-info" onClick={handleProfileRedirect}>
+        <button className="btn btn-info" style={{ marginLeft: '6px' }} onClick={handleProfileRedirect}>
           Complete profile
         </button>
       </div>
@@ -183,18 +195,18 @@ export default function StudentHome() {
       {/* Search Form */}
       <form className="mb-4" onSubmit={handleSearch}>
         <div className="row g-3">
-        <div className="col-md-4"> {/* Adjusted width */}
-        <input
+          <div className="col-md-4">
+            <input
               type="text"
-              name="topic"
-              value={searchParams.topic}
-              placeholder="Search by topic"
+              name="title"
+              value={searchParams.title}
+              placeholder="Search by title"
               className="form-control"
               onChange={handleSearchChange}
             />
           </div>
-          <div className="col-md-4"> {/* Adjusted width */}
-          <input
+          <div className="col-md-4">
+            <input
               type="text"
               name="instructor"
               value={searchParams.instructor}

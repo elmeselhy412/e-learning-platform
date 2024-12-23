@@ -142,14 +142,18 @@ async uploadMedia(
     return this.coursesService.addMediaToCourse(courseId, loggedInInstructorId, mediaPaths);
   }
   @Get('search-courses')
-  async searchCourses(@Query('topic') topic?: string, @Query('instructor') instructor?: string) {
-    try {
-      const courses = await this.coursesService.searchCourses({ topic, instructor });
-      return { courses };
-    } catch (error) {
-      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
-    }
+async searchCourses(
+  @Query('title') title?: string,
+  @Query('instructor') instructor?: string
+) {
+  try {
+    const courses = await this.coursesService.searchCourses({ title, instructor });
+    return { courses };
+  } catch (error) {
+    throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
   }
+}
+
   
 @Get('enrolled-courses/:userId')
 async getEnrolledCourses(@Param('userId') userId: string) {
