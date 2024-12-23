@@ -61,7 +61,8 @@ export class UserController {
         success: true,
         email: result.email,
         role: result.role, // Ensure `role` exists in your user entity
-        userId: result.userId
+        userId: result.userId,
+        token: result.token
 
       };    } catch (error) {
       console.error('Error during OTP verification:', error);
@@ -131,7 +132,6 @@ async updateInstructorProfile(
 
   @Get('students')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
   async getAllStudent() {
     try {
       const students = await this.userService.getAllStudents();

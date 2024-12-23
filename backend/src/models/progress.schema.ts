@@ -4,7 +4,7 @@ import mongoose, { HydratedDocument } from 'mongoose';
 
 export type UserDocument = HydratedDocument<Progress>;
 
-@Schema()
+@Schema({ collection: 'progresses' }) // This ensures the schema maps to the correct MongoDB collection
 export class Progress extends Document {
   @Prop({ required: true })
   userId: string;

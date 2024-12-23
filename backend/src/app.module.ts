@@ -18,7 +18,11 @@ import { ChatModule } from './chat/chat.module';
 import { ChatGateway } from './chat/chat.gateway';
 import { MessageService } from './messages/message.service';
 import { ForumModule } from './forum/forum.module';
+import { PerformanceModule } from './performance/performance.module';
+import { ModulesModule } from './modules/modules.module';
 import { BroadcastModule } from './broadcast/broadcast.module';
+
+
 
 @Module({
   imports: [
@@ -49,6 +53,8 @@ import { BroadcastModule } from './broadcast/broadcast.module';
     ChatModule,
     ChatGateway,    
     ForumModule,
+    PerformanceModule,
+    ModulesModule,
     BroadcastModule,
 
   ],

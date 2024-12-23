@@ -39,6 +39,10 @@ export default function VerifyOTP() {
         // Save role in context
         setRole(role);
         localStorage.setItem('userId', userId);
+        console.log(response.data);
+        localStorage.setItem('token', response.data.token); // Save the token in localStorage
+        console.log(response.data.token);
+
         setUserId(userId); // Save userId in context
         console.log(userId);
         console.log(role);

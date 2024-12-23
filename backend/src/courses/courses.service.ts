@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import mongoose, { Model } from 'mongoose';
+import mongoose, { Model, Types } from 'mongoose';
 import { Note, NoteDocument } from '../models/Notes.schema'; // Adjust path if necessary
 import { CreateCourseDto } from 'src/dto/create-course.dto';
 import * as fs from 'fs';
@@ -8,7 +8,10 @@ import * as path from 'path';
 import { Course, CourseDocument } from 'src/models/course.schema';
 import { EnrollCourseDto } from 'src/dto/enroll-course.dto';
 import { User, UserDocument } from 'src/models/user.schema';
+import { UpdateCourseDto } from 'src/dto/update-course.dto';
 import { BroadcastService } from 'src/broadcast/broadcast.service';
+
+
 
 @Injectable()
 export class CoursesService {
@@ -41,8 +44,23 @@ export class CoursesService {
   async getAllCourses() {
     return this.courseModel.find().exec();
   }
+
+  async findById(id: string) {
+    // Validate the ID
+    if (!Types.ObjectId.isValid(id)) {
+      throw new BadRequestException('Invalid ID format');
+    }
   
+    // Find the course by ID
+    const course = await this.courseModel.findById(id).exec();
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
   
+    return course;
+  }
+  
+    
   async adjustAndOptimizeCourses(
     folderPath: string,
     feedbackData: Record<string, any>,
@@ -161,21 +179,21 @@ export class CoursesService {
 
     await this.noteModel.findByIdAndDelete(id);
   }
-  async addMediaToCourse(courseId: string, instructorId: string, mediaPaths: string[]): Promise<Course> {
+  
+
+  async addMediaToCourse(
+    courseId: string,
+    mediaPaths: string[],
+  ): Promise<Course> {
     // Find the course by its ID
     const course = await this.courseModel.findById(courseId).exec();
     if (!course) {
       throw new NotFoundException(`Course with ID ${courseId} not found.`);
     }
-  
-    // Check if the logged-in instructor matches the course instructor
-    if (course.instructorId !== instructorId) {
-      throw new ForbiddenException(`You are not authorized to modify this course.`);
-    }
-  
+
     // Append the new media paths to the existing media array
     course.media.push(...mediaPaths);
-  
+
     // Save and return the updated course document
     return course.save();
   }
@@ -235,6 +253,74 @@ export class CoursesService {
     };
   }
   
+  async updateCourse(courseId: string, update: { content: string; updatedBy: string }) {
+    console.log('Received Payload:', update);
+  
+    // Fetch the course
+    const course = await this.courseModel.findById(courseId);
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+    console.log('Current Course:', course);
+  
+    // Only add to revisions if content is not empty
+    if (course.content && course.content.trim() !== '') {
+      console.log('Adding to revisions:', course.content);
+      course.revisions.push({
+        content: course.content, // Add only valid content
+        updatedBy: update.updatedBy,
+        updatedAt: new Date(),
+      });
+    } else {
+      console.warn('Skipping adding to revisions because content is empty');
+    }
+  
+    // Update the course content
+    course.content = update.content;
+    console.log('Updated Content:', course.content);
+  
+    return course.save();
+  }
+  
+  
+  // Retrieve all revisions for a course
+  async getRevisions(courseId: string) {
+    const course = await this.courseModel.findById(courseId, 'revisions');
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    return course.revisions;
+  }
+    
+  async rollbackToVersion(courseId: string, versionIndex: number) {
+    const course = await this.courseModel.findById(courseId);
+    if (!course) {
+      throw new NotFoundException('Course not found');
+    }
+
+    if (!course.revisions[versionIndex]) {
+      throw new NotFoundException('Version not found');
+    }
+
+    // Retrieve the selected version
+    const selectedVersion = course.revisions[versionIndex];
+
+    // Update the current course content with the selected version
+    course.content = selectedVersion.content;
+
+    // Add the rollback operation as a new revision
+    course.revisions.push({
+      content: selectedVersion.content,
+      updatedBy: 'rollbackSystem', // System or admin performing the rollback
+      updatedAt: new Date(),
+    });
+
+    return course.save();
+  }
+  
+
+     
   // Archive or Unarchive a course
 async archiveCourse(courseId: string, archived: boolean): Promise<Course> {
   const course = await this.courseModel.findById(courseId).exec();
@@ -269,5 +355,8 @@ async archiveCourse(courseId: string, archived: boolean): Promise<Course> {
     return { message: `Course with ID ${courseId} has been deleted.` };
   }
     
+  
+}
+
   
 }
