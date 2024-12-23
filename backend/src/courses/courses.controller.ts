@@ -10,6 +10,7 @@ import { diskStorage, Multer } from 'multer'; // Ensure this import is added at 
 import { UserService } from 'src/user/user.service';
 import { UpdateCourseDto } from 'src/dto/update-course.dto';
 import { Course } from 'src/models/course.schema';
+import{UpdateCoursedetDto} from 'src/dto/update-course-det.dto'
 
 @Controller('courses')
 export class CoursesController {
@@ -152,6 +153,8 @@ export class CoursesController {
   }
   
   
+  
+  
 @Get('enrolled-courses/:userId')
 async getEnrolledCourses(@Param('userId') userId: string) {
   const user = await this.userService.getUserById(userId);
@@ -212,5 +215,20 @@ async deleteCourse(@Param('id') id: string) {
     ) {
       return this.coursesService.rollbackToVersion(courseId, versionIndex);
     }
-  
+    @Patch('details/:id')
+  async updateCourseDet(
+    @Param('id') courseId: string,
+    @Body() UpdateCoursedetDto: UpdateCoursedetDto,
+  ) {
+    try {
+      const updatedCourse = await this.coursesService.updateCourseDet(courseId, UpdateCoursedetDto);
+      return { message: 'Course updated successfully', updatedCourse };
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new Error('An error occurred while updating the course');
+    }
+}
+
 }

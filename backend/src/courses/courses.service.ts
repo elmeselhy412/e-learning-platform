@@ -9,6 +9,7 @@ import { Course, CourseDocument } from 'src/models/course.schema';
 import { EnrollCourseDto } from 'src/dto/enroll-course.dto';
 import { User, UserDocument } from 'src/models/user.schema';
 import { UpdateCourseDto } from 'src/dto/update-course.dto';
+import{UpdateCoursedetDto} from 'src/dto/update-course-det.dto'
 import { BroadcastService } from 'src/broadcast/broadcast.service';
 
 
@@ -24,7 +25,17 @@ export class CoursesService {
 
   ) {}
 
- 
+  async updateCourseDet(courseId: string, UpdateCoursedetDto: UpdateCoursedetDto): Promise<Course> {
+    const updatedCourse = await this.courseModel
+      .findByIdAndUpdate(courseId, UpdateCoursedetDto, { new: true })
+      .exec();
+
+    if (!updatedCourse) {
+      throw new NotFoundException(`Course with ID ${courseId} not found`);
+    }
+
+    return updatedCourse;
+  }
   async createCourse(createCourseDto: CreateCourseDto): Promise<Course> {
     // Ensure that the course title is unique (optional validation)
     const existingCourse = await this.courseModel.findOne({ title: createCourseDto.title });
@@ -203,6 +214,7 @@ export class CoursesService {
     if (filters.instructor) query.createdBy = filters.instructor; // Match instructor by ID
     return this.courseModel.find(query).exec();
   }
+  
   
   
   

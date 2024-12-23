@@ -250,7 +250,7 @@ export default function Home() {
       <div className="mt-5">
         <h2 className="text-center mb-4">Courses</h2>
         <div className="table-responsive">
-          <table className="table table-bordered table-striped">
+          <table className="table table-bordered table-striped" style={{width:'1000px'}}>
             <thead className="thead-dark">
               <tr>
                 <th>Title</th>
@@ -274,12 +274,7 @@ export default function Home() {
                     >
                       Upload Multimedia
                     </button>
-                    <button
-                      className="btn btn-secondary ms-2"
-                      onClick={() => router.push(`/instructor/courses/${course._id}/optimize`)}
-                    >
-                      Adjust & Optimize
-                    </button>
+                    
                   </td>
                 </tr>
               ))}

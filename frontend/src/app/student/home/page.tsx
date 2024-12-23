@@ -181,9 +181,10 @@ export default function StudentHome() {
         </button>
       </div>
 
-      <form className="mb-4" onSubmit={handleSearch}>
+     {/* Search Form */}
+     <form className="mb-4" onSubmit={handleSearch}>
         <div className="row g-3">
-          <div className="col-md-4">
+          <div className="col-md-3">
             <input
               type="text"
               name="title"
@@ -193,12 +194,12 @@ export default function StudentHome() {
               onChange={handleSearchChange}
             />
           </div>
-          <div className="col-md-4">
+          <div className="col-md-3">
             <input
               type="text"
               name="instructor"
               value={searchParams.instructor}
-              placeholder="Search by instructor (ID)"
+              placeholder="Search by instructor"
               className="form-control"
               onChange={handleSearchChange}
             />
