@@ -97,9 +97,7 @@ export default function StudentHome() {
 
       {/* Action Buttons */}
       <div className="mb-4">
-        <button className="btn btn-secondary me-2" onClick={handleProfileRedirect}>
-          Complete Profile
-        </button>
+        
         <button className="btn btn-primary me-2" onClick={handleDashboardRedirect}>
           Go to Dashboard
         </button>
